@@ -36,13 +36,13 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-50">
+    <div className="flex min-h-screen items-center justify-center bg-slate-50 dark:bg-slate-900">
       <div className="w-full max-w-md">
-        <div className="bg-white shadow-lg rounded-lg p-8">
+        <div className="bg-white dark:bg-slate-800 shadow-lg rounded-lg p-8">
           {/* Logo */}
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold text-primary-600">CorePro</h1>
-            <p className="mt-2 text-sm text-slate-600">
+            <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
               Sistema de Gestión Administrativa
             </p>
           </div>
@@ -70,8 +70,8 @@ export default function LoginPage() {
             />
 
             {error && (
-              <div className="rounded-md bg-danger-50 p-3">
-                <p className="text-sm text-danger-600">{error}</p>
+              <div className="rounded-md bg-danger-50 dark:bg-danger-900/30 p-3">
+                <p className="text-sm text-danger-600 dark:text-danger-300">{error}</p>
               </div>
             )}
 
@@ -86,8 +86,8 @@ export default function LoginPage() {
           </form>
 
           {/* Info */}
-          <div className="mt-6 rounded-md bg-slate-50 p-4">
-            <p className="text-xs text-slate-600">
+          <div className="mt-6 rounded-md bg-slate-50 dark:bg-slate-700/40 p-4">
+            <p className="text-xs text-slate-600 dark:text-slate-300">
               <strong>Nota:</strong> Este es un sistema de uso interno. Si no
               tienes credenciales de acceso, contacta al administrador.
             </p>
