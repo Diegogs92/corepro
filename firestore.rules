@@ -1,0 +1,140 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ========================================================================
+    // FUNCIONES AUXILIARES
+    // ========================================================================
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // ========================================================================
+    // REGLAS POR COLECCIÓN
+    // ========================================================================
+
+    // INVERSORES - Solo lectura para autenticados
+    match /inversores/{inversoresId} {
+      allow read: if isAuthenticated();
+      allow write: if false; // Solo admin puede modificar (implementar roles)
+    }
+
+    // GASTOS DE INVERSIÓN - Solo lectura para autenticados
+    match /gastosInversion/{gastoId} {
+      allow read: if isAuthenticated();
+      allow write: if false; // Solo admin puede modificar
+    }
+
+    // SOCIOS - Lectura y escritura para autenticados
+    match /socios/{socioId} {
+      allow read: if isAuthenticated();
+      allow create, update: if isAuthenticated();
+      allow delete: if false; // Solo marcar como inactivo
+    }
+
+    // EMPLEADOS - Solo lectura para autenticados
+    match /empleados/{empleadoId} {
+      allow read: if isAuthenticated();
+      allow write: if false; // Solo admin puede modificar
+    }
+
+    // CATEGORÍAS DE PRODUCTOS - Lectura para todos
+    match /categoriasProductos/{categoriaId} {
+      allow read: if true;
+      allow write: if isAuthenticated();
+    }
+
+    // PRODUCTOS - Lectura para todos, escritura para autenticados
+    match /productos/{productoId} {
+      allow read: if true;
+      allow create, update: if isAuthenticated();
+      allow delete: if false; // Solo marcar como inactivo
+
+      // Validaciones
+      allow update: if isAuthenticated() &&
+        request.resource.data.stockActual >= 0 &&
+        request.resource.data.precioBase >= 0;
+    }
+
+    // VENTAS - Lectura y escritura para autenticados
+    match /ventas/{ventaId} {
+      allow read: if isAuthenticated();
+      allow create, update: if isAuthenticated();
+      allow delete: if false; // No eliminar ventas
+
+      // Validaciones
+      allow create: if request.resource.data.total >= 0 &&
+        request.resource.data.fecha != null;
+    }
+
+    // ITEMS DE VENTA - Lectura y escritura para autenticados
+    match /itemsVenta/{itemId} {
+      allow read: if isAuthenticated();
+      allow create, update: if isAuthenticated();
+      allow delete: if false;
+
+      // Validaciones
+      allow create: if request.resource.data.cantidad > 0 &&
+        request.resource.data.precioUnitario >= 0;
+    }
+
+    // PAGOS - Lectura y escritura para autenticados
+    match /pagos/{pagoId} {
+      allow read: if isAuthenticated();
+      allow create, update: if isAuthenticated();
+      allow delete: if false;
+
+      // Validaciones
+      allow create: if request.resource.data.monto > 0;
+    }
+
+    // CATEGORÍAS DE GASTOS - Lectura para autenticados
+    match /categoriasGastos/{categoriaId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated();
+    }
+
+    // GASTOS - Lectura y escritura para autenticados
+    match /gastos/{gastoId} {
+      allow read: if isAuthenticated();
+      allow create, update: if isAuthenticated();
+      allow delete: if false;
+
+      // Validaciones
+      allow create: if request.resource.data.monto >= 0;
+    }
+
+    // PAGOS DE SUELDOS - Solo lectura para autenticados
+    match /pagosSueldos/{pagoId} {
+      allow read: if isAuthenticated();
+      allow write: if false; // Solo admin puede modificar
+    }
+
+    // MOVIMIENTOS DE STOCK - Lectura para autenticados
+    match /movimientosStock/{movimientoId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow update, delete: if false; // No modificar historial
+    }
+
+    // COSECHAS - Lectura y escritura para autenticados
+    match /cosechas/{cosechaId} {
+      allow read: if isAuthenticated();
+      allow create, update: if isAuthenticated();
+      allow delete: if false;
+    }
+
+    // MOVIMIENTOS DE CAJA - Lectura para autenticados
+    match /movimientosCaja/{movimientoId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow update, delete: if false; // No modificar historial
+    }
+  }
+}
