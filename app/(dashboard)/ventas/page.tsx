@@ -20,6 +20,7 @@ import { formatCurrency, formatDate } from "@/lib/utils";
 import type { Venta } from "@/lib/types";
 import { startOfMonth, endOfMonth, startOfDay, endOfDay } from "date-fns";
 import { mockStorage } from "@/lib/mockData";
+import Modal from "@/components/ui/Modal";
 
 export default function VentasPage() {
   const [ventas, setVentas] = useState<Venta[]>([]);
@@ -178,75 +179,6 @@ export default function VentasPage() {
             </div>
           </CardHeader>
           <CardContent>
-            {showForm && (
-              <form onSubmit={handleSubmit} className="mb-6 p-4 bg-slate-50 rounded-lg">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Input
-                    label="Fecha"
-                    type="date"
-                    value={formData.fecha}
-                    onChange={(e) =>
-                      setFormData({ ...formData, fecha: e.target.value })
-                    }
-                    required
-                  />
-
-                  <Select
-                    label="Medio de Pago"
-                    value={formData.medioPago}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        medioPago: e.target.value as any,
-                      })
-                    }
-                    options={[
-                      { value: "efectivo", label: "Efectivo" },
-                      { value: "transferencia", label: "Transferencia" },
-                      { value: "debito", label: "Débito" },
-                      { value: "credito", label: "Crédito" },
-                    ]}
-                  />
-
-                  <Input
-                    label="Concepto"
-                    value={formData.concepto}
-                    onChange={(e) =>
-                      setFormData({ ...formData, concepto: e.target.value })
-                    }
-                    placeholder="Ej: Venta de consulta médica"
-                    required
-                  />
-
-                  <Input
-                    label="Monto"
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={formData.monto}
-                    onChange={(e) =>
-                      setFormData({ ...formData, monto: e.target.value })
-                    }
-                    placeholder="0.00"
-                    required
-                  />
-                </div>
-
-                <div className="flex gap-2 mt-4">
-                  <Button type="submit" disabled={saving}>
-                    {saving ? "Guardando..." : "Guardar Venta"}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    onClick={() => setShowForm(false)}
-                    disabled={saving}
-                  >
-                    Cancelar
-                  </Button>
-                </div>
-              </form>
-            )}
 
             {ventas.length === 0 ? (
               <div className="text-center py-12 text-slate-500">
@@ -288,6 +220,76 @@ export default function VentasPage() {
           </CardContent>
         </Card>
       </div>
+
+      <Modal isOpen={showForm} onClose={() => setShowForm(false)} title="Nueva Venta" size="lg">
+        <form onSubmit={handleSubmit}>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Input
+              label="Fecha"
+              type="date"
+              value={formData.fecha}
+              onChange={(e) =>
+                setFormData({ ...formData, fecha: e.target.value })
+              }
+              required
+            />
+
+            <Select
+              label="Medio de Pago"
+              value={formData.medioPago}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  medioPago: e.target.value as any,
+                })
+              }
+              options={[
+                { value: "efectivo", label: "Efectivo" },
+                { value: "transferencia", label: "Transferencia" },
+                { value: "debito", label: "Débito" },
+                { value: "credito", label: "Crédito" },
+              ]}
+            />
+
+            <Input
+              label="Concepto"
+              value={formData.concepto}
+              onChange={(e) =>
+                setFormData({ ...formData, concepto: e.target.value })
+              }
+              placeholder="Ej: Venta de consulta médica"
+              required
+            />
+
+            <Input
+              label="Monto"
+              type="number"
+              step="0.01"
+              min="0"
+              value={formData.monto}
+              onChange={(e) =>
+                setFormData({ ...formData, monto: e.target.value })
+              }
+              placeholder="0.00"
+              required
+            />
+          </div>
+
+          <div className="flex gap-2 mt-6">
+            <Button type="submit" disabled={saving}>
+              {saving ? "Guardando..." : "Guardar Venta"}
+            </Button>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => setShowForm(false)}
+              disabled={saving}
+            >
+              Cancelar
+            </Button>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 }

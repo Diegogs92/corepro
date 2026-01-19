@@ -20,6 +20,7 @@ import { formatCurrency, formatDate } from "@/lib/utils";
 import type { Gasto } from "@/lib/types";
 import { startOfMonth, endOfMonth } from "date-fns";
 import { mockStorage } from "@/lib/mockData";
+import Modal from "@/components/ui/Modal";
 
 export default function GastosPage() {
   const [gastos, setGastos] = useState<Gasto[]>([]);
@@ -153,79 +154,6 @@ export default function GastosPage() {
             </div>
           </CardHeader>
           <CardContent>
-            {showForm && (
-              <form
-                onSubmit={handleSubmit}
-                className="mb-6 p-4 bg-slate-50 rounded-lg"
-              >
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Input
-                    label="Fecha"
-                    type="date"
-                    value={formData.fecha}
-                    onChange={(e) =>
-                      setFormData({ ...formData, fecha: e.target.value })
-                    }
-                    required
-                  />
-
-                  <Select
-                    label="Categoría"
-                    value={formData.categoria}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        categoria: e.target.value as any,
-                      })
-                    }
-                    options={[
-                      { value: "servicios", label: "Servicios" },
-                      { value: "suministros", label: "Suministros" },
-                      { value: "personal", label: "Personal" },
-                      { value: "mantenimiento", label: "Mantenimiento" },
-                      { value: "otros", label: "Otros" },
-                    ]}
-                  />
-
-                  <Input
-                    label="Concepto"
-                    value={formData.concepto}
-                    onChange={(e) =>
-                      setFormData({ ...formData, concepto: e.target.value })
-                    }
-                    placeholder="Ej: Pago de luz y agua"
-                    required
-                  />
-
-                  <Input
-                    label="Monto"
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={formData.monto}
-                    onChange={(e) =>
-                      setFormData({ ...formData, monto: e.target.value })
-                    }
-                    placeholder="0.00"
-                    required
-                  />
-                </div>
-
-                <div className="flex gap-2 mt-4">
-                  <Button type="submit" disabled={saving}>
-                    {saving ? "Guardando..." : "Guardar Gasto"}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    onClick={() => setShowForm(false)}
-                    disabled={saving}
-                  >
-                    Cancelar
-                  </Button>
-                </div>
-              </form>
-            )}
 
             {gastos.length === 0 ? (
               <div className="text-center py-12 text-slate-500">
@@ -267,6 +195,77 @@ export default function GastosPage() {
           </CardContent>
         </Card>
       </div>
+
+      <Modal isOpen={showForm} onClose={() => setShowForm(false)} title="Nuevo Gasto" size="lg">
+        <form onSubmit={handleSubmit}>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Input
+              label="Fecha"
+              type="date"
+              value={formData.fecha}
+              onChange={(e) =>
+                setFormData({ ...formData, fecha: e.target.value })
+              }
+              required
+            />
+
+            <Select
+              label="Categoría"
+              value={formData.categoria}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  categoria: e.target.value as any,
+                })
+              }
+              options={[
+                { value: "servicios", label: "Servicios" },
+                { value: "suministros", label: "Suministros" },
+                { value: "personal", label: "Personal" },
+                { value: "mantenimiento", label: "Mantenimiento" },
+                { value: "otros", label: "Otros" },
+              ]}
+            />
+
+            <Input
+              label="Concepto"
+              value={formData.concepto}
+              onChange={(e) =>
+                setFormData({ ...formData, concepto: e.target.value })
+              }
+              placeholder="Ej: Pago de luz y agua"
+              required
+            />
+
+            <Input
+              label="Monto"
+              type="number"
+              step="0.01"
+              min="0"
+              value={formData.monto}
+              onChange={(e) =>
+                setFormData({ ...formData, monto: e.target.value })
+              }
+              placeholder="0.00"
+              required
+            />
+          </div>
+
+          <div className="flex gap-2 mt-6">
+            <Button type="submit" disabled={saving}>
+              {saving ? "Guardando..." : "Guardar Gasto"}
+            </Button>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => setShowForm(false)}
+              disabled={saving}
+            >
+              Cancelar
+            </Button>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 }

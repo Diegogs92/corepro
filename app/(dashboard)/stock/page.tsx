@@ -18,6 +18,7 @@ import { Plus, Package, Search, Edit } from "lucide-react";
 import { getStockStatus } from "@/lib/utils";
 import type { Producto } from "@/lib/types";
 import { mockStorage } from "@/lib/mockData";
+import Modal from "@/components/ui/Modal";
 
 export default function StockPage() {
   const [productos, setProductos] = useState<Producto[]>([]);
@@ -165,94 +166,6 @@ export default function StockPage() {
             </div>
           </CardHeader>
           <CardContent>
-            {showForm && (
-              <form onSubmit={handleSubmit} className="mb-6 p-4 bg-slate-50 rounded-lg">
-                <h3 className="font-semibold text-lg mb-4">
-                  {editingId ? "Editar Producto" : "Nuevo Producto"}
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Input
-                    label="Nombre del Producto"
-                    value={formData.nombre}
-                    onChange={(e) =>
-                      setFormData({ ...formData, nombre: e.target.value })
-                    }
-                    placeholder="Ej: Guantes de látex"
-                    required
-                  />
-
-                  <Input
-                    label="Descripción (opcional)"
-                    value={formData.descripcion}
-                    onChange={(e) =>
-                      setFormData({ ...formData, descripcion: e.target.value })
-                    }
-                    placeholder="Detalles adicionales"
-                  />
-
-                  <Input
-                    label="Cantidad Actual"
-                    type="number"
-                    min="0"
-                    value={formData.cantidadActual}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        cantidadActual: e.target.value,
-                      })
-                    }
-                    placeholder="0"
-                    required
-                  />
-
-                  <Input
-                    label="Stock Mínimo"
-                    type="number"
-                    min="0"
-                    value={formData.stockMinimo}
-                    onChange={(e) =>
-                      setFormData({ ...formData, stockMinimo: e.target.value })
-                    }
-                    placeholder="0"
-                    required
-                  />
-
-                  <Input
-                    label="Precio Unitario"
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={formData.precioUnitario}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        precioUnitario: e.target.value,
-                      })
-                    }
-                    placeholder="0.00"
-                    required
-                  />
-                </div>
-
-                <div className="flex gap-2 mt-4">
-                  <Button type="submit" disabled={saving}>
-                    {saving
-                      ? "Guardando..."
-                      : editingId
-                      ? "Actualizar Producto"
-                      : "Guardar Producto"}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    onClick={handleCancelEdit}
-                    disabled={saving}
-                  >
-                    Cancelar
-                  </Button>
-                </div>
-              </form>
-            )}
 
             {filteredProductos.length === 0 ? (
               <div className="text-center py-12 text-slate-500">
@@ -304,6 +217,97 @@ export default function StockPage() {
           </CardContent>
         </Card>
       </div>
+
+      <Modal
+        isOpen={showForm}
+        onClose={handleCancelEdit}
+        title={editingId ? "Editar Producto" : "Nuevo Producto"}
+        size="lg"
+      >
+        <form onSubmit={handleSubmit}>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Input
+              label="Nombre del Producto"
+              value={formData.nombre}
+              onChange={(e) =>
+                setFormData({ ...formData, nombre: e.target.value })
+              }
+              placeholder="Ej: Guantes de látex"
+              required
+            />
+
+            <Input
+              label="Descripción (opcional)"
+              value={formData.descripcion}
+              onChange={(e) =>
+                setFormData({ ...formData, descripcion: e.target.value })
+              }
+              placeholder="Detalles adicionales"
+            />
+
+            <Input
+              label="Cantidad Actual"
+              type="number"
+              min="0"
+              value={formData.cantidadActual}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  cantidadActual: e.target.value,
+                })
+              }
+              placeholder="0"
+              required
+            />
+
+            <Input
+              label="Stock Mínimo"
+              type="number"
+              min="0"
+              value={formData.stockMinimo}
+              onChange={(e) =>
+                setFormData({ ...formData, stockMinimo: e.target.value })
+              }
+              placeholder="0"
+              required
+            />
+
+            <Input
+              label="Precio Unitario"
+              type="number"
+              step="0.01"
+              min="0"
+              value={formData.precioUnitario}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  precioUnitario: e.target.value,
+                })
+              }
+              placeholder="0.00"
+              required
+            />
+          </div>
+
+          <div className="flex gap-2 mt-6">
+            <Button type="submit" disabled={saving}>
+              {saving
+                ? "Guardando..."
+                : editingId
+                ? "Actualizar Producto"
+                : "Guardar Producto"}
+            </Button>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={handleCancelEdit}
+              disabled={saving}
+            >
+              Cancelar
+            </Button>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 }
