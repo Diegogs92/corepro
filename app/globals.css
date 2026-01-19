@@ -4,10 +4,16 @@
 
 @layer base {
   * {
-    border-color: theme('colors.slate.200');
+    @apply border-slate-200 dark:border-slate-700;
   }
 
   body {
     @apply bg-slate-50 text-slate-900 antialiased;
+    @apply dark:bg-slate-900 dark:text-slate-100;
+  }
+
+  /* Transiciones suaves para el cambio de tema */
+  * {
+    @apply transition-colors duration-200;
   }
 }

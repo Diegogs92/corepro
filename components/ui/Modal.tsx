@@ -48,7 +48,7 @@ export default function Modal({
     <div className="fixed inset-0 z-50 overflow-y-auto">
       {/* Overlay/Backdrop */}
       <div
-        className="fixed inset-0 bg-black bg-opacity-50 transition-opacity"
+        className="fixed inset-0 bg-black bg-opacity-50 dark:bg-opacity-70 transition-opacity"
         onClick={onClose}
       />
 
@@ -57,17 +57,17 @@ export default function Modal({
         {/* Modal Content */}
         <div
           className={cn(
-            "relative w-full bg-white rounded-lg shadow-xl transform transition-all",
+            "relative w-full bg-white dark:bg-slate-800 rounded-lg shadow-xl transform transition-all",
             sizeClasses[size]
           )}
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
-          <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200">
-            <h2 className="text-xl font-semibold text-slate-900">{title}</h2>
+          <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-slate-700">
+            <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-100">{title}</h2>
             <button
               onClick={onClose}
-              className="text-slate-400 hover:text-slate-600 transition-colors"
+              className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
             >
               <X className="h-5 w-5" />
             </button>

@@ -9,8 +9,11 @@ import {
   Package,
   CreditCard,
   LogOut,
+  Moon,
+  Sun,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useTheme } from "@/contexts/ThemeContext";
 
 const menuItems = [
   {
@@ -38,6 +41,7 @@ const menuItems = [
 export default function Sidebar() {
   const pathname = usePathname();
   const { signOut } = useAuth();
+  const { theme, toggleTheme } = useTheme();
 
   const handleSignOut = async () => {
     try {
@@ -48,10 +52,10 @@ export default function Sidebar() {
   };
 
   return (
-    <div className="flex h-screen w-64 flex-col bg-white border-r border-slate-200">
+    <div className="flex h-screen w-64 flex-col bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700">
       {/* Logo */}
-      <div className="flex h-16 items-center border-b border-slate-200 px-6">
-        <h1 className="text-2xl font-bold text-primary-600">CorePro</h1>
+      <div className="flex h-16 items-center border-b border-slate-200 dark:border-slate-700 px-6">
+        <h1 className="text-2xl font-bold text-primary-600 dark:text-primary-400">CorePro</h1>
       </div>
 
       {/* Navigation */}
@@ -67,8 +71,8 @@ export default function Sidebar() {
               className={cn(
                 "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
                 isActive
-                  ? "bg-primary-50 text-primary-600"
-                  : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                  ? "bg-primary-50 text-primary-600 dark:bg-primary-900/30 dark:text-primary-400"
+                  : "text-slate-600 hover:bg-slate-50 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-700 dark:hover:text-slate-100"
               )}
             >
               <Icon className="h-5 w-5" />
@@ -78,11 +82,22 @@ export default function Sidebar() {
         })}
       </nav>
 
-      {/* Sign Out */}
-      <div className="border-t border-slate-200 p-3">
+      {/* Theme Toggle & Sign Out */}
+      <div className="border-t border-slate-200 dark:border-slate-700 p-3 space-y-1">
+        <button
+          onClick={toggleTheme}
+          className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-600 dark:text-slate-300 transition-colors hover:bg-slate-50 hover:text-slate-900 dark:hover:bg-slate-700 dark:hover:text-slate-100"
+        >
+          {theme === "light" ? (
+            <Moon className="h-5 w-5" />
+          ) : (
+            <Sun className="h-5 w-5" />
+          )}
+          {theme === "light" ? "Tema Oscuro" : "Tema Claro"}
+        </button>
         <button
           onClick={handleSignOut}
-          className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900"
+          className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-600 dark:text-slate-300 transition-colors hover:bg-slate-50 hover:text-slate-900 dark:hover:bg-slate-700 dark:hover:text-slate-100"
         >
           <LogOut className="h-5 w-5" />
           Cerrar Sesión
