@@ -107,7 +107,7 @@ export default function DashboardPage() {
 
   if (loading) {
     return (
-      <div className="flex h-screen items-center justify-center">
+      <div className="flex min-h-screen items-center justify-center px-4">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 dark:border-primary-400 mx-auto"></div>
           <p className="mt-4 text-slate-600 dark:text-slate-400">Cargando dashboard...</p>
@@ -123,7 +123,7 @@ export default function DashboardPage() {
         subtitle="Resumen general del sistema de gestión (Modo Demo)"
       />
 
-      <div className="p-8">
+      <div className="p-4 sm:p-6 lg:p-8">
         {/* Estadísticas principales */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <StatCard
@@ -169,7 +169,7 @@ export default function DashboardPage() {
                   <p>No hay productos con stock bajo</p>
                 </div>
               ) : (
-                <Table>
+                <Table className="min-w-[520px]">
                   <TableHeader>
                     <TableRow>
                       <TableHead>Producto</TableHead>
@@ -226,7 +226,7 @@ export default function DashboardPage() {
                   <p>No hay transacciones registradas</p>
                 </div>
               ) : (
-                <Table>
+                <Table className="min-w-[520px]">
                   <TableHeader>
                     <TableRow>
                       <TableHead>Tipo</TableHead>

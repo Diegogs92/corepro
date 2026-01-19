@@ -21,7 +21,7 @@ export default function DashboardLayout({
 
   if (loading) {
     return (
-      <div className="flex h-screen items-center justify-center dark:bg-slate-900">
+      <div className="flex min-h-screen items-center justify-center dark:bg-slate-900 px-4">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
           <p className="mt-4 text-slate-600 dark:text-slate-300">Cargando...</p>
@@ -35,7 +35,7 @@ export default function DashboardLayout({
   }
 
   return (
-    <div className="flex h-screen overflow-hidden bg-slate-50 dark:bg-slate-900">
+    <div className="flex flex-col md:flex-row min-h-screen md:h-screen md:overflow-hidden bg-slate-50 dark:bg-slate-900">
       <Sidebar />
       <div className="flex-1 overflow-auto">{children}</div>
     </div>

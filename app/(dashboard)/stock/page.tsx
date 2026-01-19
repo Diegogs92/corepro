@@ -143,7 +143,7 @@ export default function StockPage() {
     <div>
       <Header title="Stock e Insumos" subtitle="Control de inventario (Modo Demo)" />
 
-      <div className="p-8">
+      <div className="p-4 sm:p-6 lg:p-8">
         <Card>
           <CardHeader>
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -177,7 +177,7 @@ export default function StockPage() {
                 </p>
               </div>
             ) : (
-              <Table>
+              <Table className="min-w-[720px]">
                 <TableHeader>
                   <TableRow>
                     <TableHead>Producto</TableHead>
@@ -289,7 +289,7 @@ export default function StockPage() {
             />
           </div>
 
-          <div className="flex gap-2 mt-6">
+          <div className="flex flex-col sm:flex-row gap-2 mt-6">
             <Button type="submit" disabled={saving}>
               {saving
                 ? "Guardando..."

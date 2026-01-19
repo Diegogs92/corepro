@@ -36,9 +36,9 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-50 dark:bg-slate-900">
+    <div className="flex min-h-screen items-center justify-center bg-slate-50 dark:bg-slate-900 px-4 py-8">
       <div className="w-full max-w-md">
-        <div className="bg-white dark:bg-slate-800 shadow-lg rounded-lg p-8">
+        <div className="bg-white dark:bg-slate-800 shadow-lg rounded-lg p-6 sm:p-8">
           {/* Logo */}
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold text-primary-600">CorePro</h1>

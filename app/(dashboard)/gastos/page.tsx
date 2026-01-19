@@ -122,11 +122,11 @@ export default function GastosPage() {
     <div>
       <Header title="Gastos" subtitle="Registro y control de gastos operativos (Modo Demo)" />
 
-      <div className="p-8">
+      <div className="p-4 sm:p-6 lg:p-8">
         <div className="mb-8">
           <Card>
             <CardContent className="p-6">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
                   <p className="text-sm font-medium text-slate-600 dark:text-slate-400">
                     Total Gastos del Mes
@@ -145,7 +145,7 @@ export default function GastosPage() {
 
         <Card>
           <CardHeader>
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <CardTitle>Historial de Gastos</CardTitle>
               <Button onClick={() => setShowForm(!showForm)} size="sm">
                 <Plus className="h-4 w-4 mr-2" />
@@ -161,7 +161,7 @@ export default function GastosPage() {
                 <p className="text-lg font-medium">No hay gastos registrados</p>
               </div>
             ) : (
-              <Table>
+              <Table className="min-w-[600px]">
                 <TableHeader>
                   <TableRow>
                     <TableHead>Fecha</TableHead>
@@ -251,7 +251,7 @@ export default function GastosPage() {
             />
           </div>
 
-          <div className="flex gap-2 mt-6">
+          <div className="flex flex-col sm:flex-row gap-2 mt-6">
             <Button type="submit" disabled={saving}>
               {saving ? "Guardando..." : "Guardar Gasto"}
             </Button>

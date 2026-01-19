@@ -117,11 +117,11 @@ export default function VentasPage() {
     <div>
       <Header title="Ventas e Ingresos" subtitle="Registro y control de ventas (Modo Demo)" />
 
-      <div className="p-8">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      <div className="p-4 sm:p-6 lg:p-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
           <Card>
             <CardContent className="p-6">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
                   <p className="text-sm font-medium text-slate-600 dark:text-slate-400">Hoy</p>
                   <p className="mt-2 text-2xl font-bold text-slate-900 dark:text-slate-100">
@@ -137,7 +137,7 @@ export default function VentasPage() {
 
           <Card>
             <CardContent className="p-6">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
                   <p className="text-sm font-medium text-slate-600 dark:text-slate-400">Este Mes</p>
                   <p className="mt-2 text-2xl font-bold text-slate-900 dark:text-slate-100">
@@ -153,7 +153,7 @@ export default function VentasPage() {
 
           <Card>
             <CardContent className="p-6">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
                   <p className="text-sm font-medium text-slate-600 dark:text-slate-400">Total</p>
                   <p className="mt-2 text-2xl font-bold text-slate-900 dark:text-slate-100">
@@ -170,7 +170,7 @@ export default function VentasPage() {
 
         <Card>
           <CardHeader>
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <CardTitle>Historial de Ventas</CardTitle>
               <Button onClick={() => setShowForm(!showForm)} size="sm">
                 <Plus className="h-4 w-4 mr-2" />
@@ -186,7 +186,7 @@ export default function VentasPage() {
                 <p className="text-lg font-medium">No hay ventas registradas</p>
               </div>
             ) : (
-              <Table>
+              <Table className="min-w-[600px]">
                 <TableHeader>
                   <TableRow>
                     <TableHead>Fecha</TableHead>
@@ -275,7 +275,7 @@ export default function VentasPage() {
             />
           </div>
 
-          <div className="flex gap-2 mt-6">
+          <div className="flex flex-col sm:flex-row gap-2 mt-6">
             <Button type="submit" disabled={saving}>
               {saving ? "Guardando..." : "Guardar Venta"}
             </Button>

@@ -52,14 +52,14 @@ export default function Sidebar() {
   };
 
   return (
-    <div className="flex h-screen w-64 flex-col bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700">
+    <div className="flex w-full md:w-64 flex-col bg-white dark:bg-slate-800 border-b md:border-b-0 md:border-r border-slate-200 dark:border-slate-700 md:h-screen">
       {/* Logo */}
       <div className="flex h-16 items-center border-b border-slate-200 dark:border-slate-700 px-6">
         <h1 className="text-2xl font-bold text-primary-600 dark:text-primary-400">CorePro</h1>
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 space-y-1 px-3 py-4">
+      <nav className="flex-1 flex md:flex-col flex-row gap-2 md:gap-1 px-3 py-3 md:py-4 overflow-x-auto md:overflow-visible">
         {menuItems.map((item) => {
           const isActive = pathname === item.href;
           const Icon = item.icon;
@@ -69,7 +69,7 @@ export default function Sidebar() {
               key={item.href}
               href={item.href}
               className={cn(
-                "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
+                "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors whitespace-nowrap",
                 isActive
                   ? "bg-primary-50 text-primary-600 dark:bg-primary-900/30 dark:text-primary-400"
                   : "text-slate-600 hover:bg-slate-50 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-700 dark:hover:text-slate-100"
@@ -83,10 +83,10 @@ export default function Sidebar() {
       </nav>
 
       {/* Theme Toggle & Sign Out */}
-      <div className="border-t border-slate-200 dark:border-slate-700 p-3 space-y-1">
+      <div className="border-t border-slate-200 dark:border-slate-700 p-3 flex flex-col sm:flex-row md:flex-col gap-2 md:gap-1">
         <button
           onClick={toggleTheme}
-          className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-600 dark:text-slate-300 transition-colors hover:bg-slate-50 hover:text-slate-900 dark:hover:bg-slate-700 dark:hover:text-slate-100"
+          className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-600 dark:text-slate-300 transition-colors hover:bg-slate-50 hover:text-slate-900 dark:hover:bg-slate-700 dark:hover:text-slate-100 whitespace-nowrap"
         >
           {theme === "light" ? (
             <Moon className="h-5 w-5" />
@@ -97,7 +97,7 @@ export default function Sidebar() {
         </button>
         <button
           onClick={handleSignOut}
-          className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-600 dark:text-slate-300 transition-colors hover:bg-slate-50 hover:text-slate-900 dark:hover:bg-slate-700 dark:hover:text-slate-100"
+          className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-600 dark:text-slate-300 transition-colors hover:bg-slate-50 hover:text-slate-900 dark:hover:bg-slate-700 dark:hover:text-slate-100 whitespace-nowrap"
         >
           <LogOut className="h-5 w-5" />
           Cerrar Sesión
