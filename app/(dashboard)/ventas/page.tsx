@@ -123,12 +123,12 @@ export default function VentasPage() {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-slate-600">Hoy</p>
-                  <p className="mt-2 text-2xl font-bold text-slate-900">
+                  <p className="text-sm font-medium text-slate-600 dark:text-slate-400">Hoy</p>
+                  <p className="mt-2 text-2xl font-bold text-slate-900 dark:text-slate-100">
                     {formatCurrency(stats.totalDia)}
                   </p>
                 </div>
-                <div className="rounded-full p-3 bg-success-100 text-success-600">
+                <div className="rounded-full p-3 bg-success-100 text-success-600 dark:bg-success-900/30 dark:text-success-400">
                   <DollarSign className="h-6 w-6" />
                 </div>
               </div>
@@ -139,12 +139,12 @@ export default function VentasPage() {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-slate-600">Este Mes</p>
-                  <p className="mt-2 text-2xl font-bold text-slate-900">
+                  <p className="text-sm font-medium text-slate-600 dark:text-slate-400">Este Mes</p>
+                  <p className="mt-2 text-2xl font-bold text-slate-900 dark:text-slate-100">
                     {formatCurrency(stats.totalMes)}
                   </p>
                 </div>
-                <div className="rounded-full p-3 bg-primary-100 text-primary-600">
+                <div className="rounded-full p-3 bg-primary-100 text-primary-600 dark:bg-primary-900/30 dark:text-primary-400">
                   <DollarSign className="h-6 w-6" />
                 </div>
               </div>
@@ -155,12 +155,12 @@ export default function VentasPage() {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-slate-600">Total</p>
-                  <p className="mt-2 text-2xl font-bold text-slate-900">
+                  <p className="text-sm font-medium text-slate-600 dark:text-slate-400">Total</p>
+                  <p className="mt-2 text-2xl font-bold text-slate-900 dark:text-slate-100">
                     {formatCurrency(stats.totalGeneral)}
                   </p>
                 </div>
-                <div className="rounded-full p-3 bg-slate-100 text-slate-600">
+                <div className="rounded-full p-3 bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300">
                   <DollarSign className="h-6 w-6" />
                 </div>
               </div>
@@ -181,7 +181,7 @@ export default function VentasPage() {
           <CardContent>
 
             {ventas.length === 0 ? (
-              <div className="text-center py-12 text-slate-500">
+              <div className="text-center py-12 text-slate-500 dark:text-slate-400">
                 <DollarSign className="h-12 w-12 mx-auto mb-3 opacity-50" />
                 <p className="text-lg font-medium">No hay ventas registradas</p>
               </div>
@@ -198,7 +198,7 @@ export default function VentasPage() {
                 <TableBody>
                   {ventas.map((venta) => (
                     <TableRow key={venta.id}>
-                      <TableCell className="text-slate-600">
+                      <TableCell className="text-slate-600 dark:text-slate-400">
                         {formatDate(venta.fecha)}
                       </TableCell>
                       <TableCell className="font-medium">
@@ -209,7 +209,7 @@ export default function VentasPage() {
                           {getMedioPagoLabel(venta.medioPago)}
                         </Badge>
                       </TableCell>
-                      <TableCell className="text-right font-medium text-success-600">
+                      <TableCell className="text-right font-medium text-success-600 dark:text-success-400">
                         {formatCurrency(venta.monto)}
                       </TableCell>
                     </TableRow>

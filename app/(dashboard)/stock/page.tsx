@@ -168,7 +168,7 @@ export default function StockPage() {
           <CardContent>
 
             {filteredProductos.length === 0 ? (
-              <div className="text-center py-12 text-slate-500">
+              <div className="text-center py-12 text-slate-500 dark:text-slate-400">
                 <Package className="h-12 w-12 mx-auto mb-3 opacity-50" />
                 <p className="text-lg font-medium">
                   {searchTerm
@@ -194,7 +194,7 @@ export default function StockPage() {
                       <TableCell className="font-medium">
                         {producto.nombre}
                       </TableCell>
-                      <TableCell className="text-slate-600">
+                      <TableCell className="text-slate-600 dark:text-slate-400">
                         {producto.descripcion || "-"}
                       </TableCell>
                       <TableCell>{producto.cantidadActual}</TableCell>

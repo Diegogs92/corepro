@@ -109,8 +109,8 @@ export default function DashboardPage() {
     return (
       <div className="flex h-screen items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
-          <p className="mt-4 text-slate-600">Cargando dashboard...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 dark:border-primary-400 mx-auto"></div>
+          <p className="mt-4 text-slate-600 dark:text-slate-400">Cargando dashboard...</p>
         </div>
       </div>
     );
@@ -164,7 +164,7 @@ export default function DashboardPage() {
             </CardHeader>
             <CardContent>
               {productosStockBajo.length === 0 ? (
-                <div className="text-center py-8 text-slate-500">
+                <div className="text-center py-8 text-slate-500 dark:text-slate-400">
                   <Package className="h-12 w-12 mx-auto mb-2 opacity-50" />
                   <p>No hay productos con stock bajo</p>
                 </div>
@@ -222,7 +222,7 @@ export default function DashboardPage() {
             </CardHeader>
             <CardContent>
               {ultimasTransacciones.length === 0 ? (
-                <div className="text-center py-8 text-slate-500">
+                <div className="text-center py-8 text-slate-500 dark:text-slate-400">
                   <p>No hay transacciones registradas</p>
                 </div>
               ) : (
@@ -250,14 +250,14 @@ export default function DashboardPage() {
                         <TableCell className="font-medium">
                           {trans.concepto}
                         </TableCell>
-                        <TableCell className="text-slate-600">
+                        <TableCell className="text-slate-600 dark:text-slate-400">
                           {formatDate(trans.fecha)}
                         </TableCell>
                         <TableCell
                           className={`text-right font-medium ${
                             trans.tipo === "venta"
-                              ? "text-success-600"
-                              : "text-danger-600"
+                              ? "text-success-600 dark:text-success-400"
+                              : "text-danger-600 dark:text-danger-400"
                           }`}
                         >
                           {trans.tipo === "venta" ? "+" : "-"}

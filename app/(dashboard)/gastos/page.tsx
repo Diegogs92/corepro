@@ -128,14 +128,14 @@ export default function GastosPage() {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-slate-600">
+                  <p className="text-sm font-medium text-slate-600 dark:text-slate-400">
                     Total Gastos del Mes
                   </p>
-                  <p className="mt-2 text-3xl font-bold text-slate-900">
+                  <p className="mt-2 text-3xl font-bold text-slate-900 dark:text-slate-100">
                     {formatCurrency(totalMes)}
                   </p>
                 </div>
-                <div className="rounded-full p-3 bg-danger-100 text-danger-600">
+                <div className="rounded-full p-3 bg-danger-100 text-danger-600 dark:bg-danger-900/30 dark:text-danger-400">
                   <TrendingDown className="h-8 w-8" />
                 </div>
               </div>
@@ -156,7 +156,7 @@ export default function GastosPage() {
           <CardContent>
 
             {gastos.length === 0 ? (
-              <div className="text-center py-12 text-slate-500">
+              <div className="text-center py-12 text-slate-500 dark:text-slate-400">
                 <CreditCard className="h-12 w-12 mx-auto mb-3 opacity-50" />
                 <p className="text-lg font-medium">No hay gastos registrados</p>
               </div>
@@ -173,7 +173,7 @@ export default function GastosPage() {
                 <TableBody>
                   {gastos.map((gasto) => (
                     <TableRow key={gasto.id}>
-                      <TableCell className="text-slate-600">
+                      <TableCell className="text-slate-600 dark:text-slate-400">
                         {formatDate(gasto.fecha)}
                       </TableCell>
                       <TableCell>
@@ -184,7 +184,7 @@ export default function GastosPage() {
                       <TableCell className="font-medium">
                         {gasto.concepto}
                       </TableCell>
-                      <TableCell className="text-right font-medium text-danger-600">
+                      <TableCell className="text-right font-medium text-danger-600 dark:text-danger-400">
                         {formatCurrency(gasto.monto)}
                       </TableCell>
                     </TableRow>

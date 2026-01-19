@@ -28,10 +28,10 @@ export default function StatCard({
       : value;
 
   const iconColorClass = {
-    default: "bg-primary-100 text-primary-600",
-    success: "bg-success-100 text-success-600",
-    danger: "bg-danger-100 text-danger-600",
-    warning: "bg-warning-100 text-warning-600",
+    default: "bg-primary-100 text-primary-600 dark:bg-primary-900/30 dark:text-primary-400",
+    success: "bg-success-100 text-success-600 dark:bg-success-900/30 dark:text-success-400",
+    danger: "bg-danger-100 text-danger-600 dark:bg-danger-900/30 dark:text-danger-400",
+    warning: "bg-warning-100 text-warning-600 dark:bg-warning-900/30 dark:text-warning-400",
   }[variant];
 
   return (
@@ -39,12 +39,12 @@ export default function StatCard({
       <CardContent className="p-6">
         <div className="flex items-center justify-between">
           <div className="flex-1">
-            <p className="text-sm font-medium text-slate-600">{title}</p>
-            <p className="mt-2 text-3xl font-bold text-slate-900">
+            <p className="text-sm font-medium text-slate-600 dark:text-slate-400">{title}</p>
+            <p className="mt-2 text-3xl font-bold text-slate-900 dark:text-slate-100">
               {formattedValue}
             </p>
             {trend && (
-              <p className="mt-2 text-sm text-slate-500">{trend.label}</p>
+              <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">{trend.label}</p>
             )}
           </div>
           <div className={`rounded-full p-3 ${iconColorClass}`}>
