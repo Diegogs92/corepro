@@ -1,0 +1,1021 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import Header from "@/components/layout/Header";
+import Button from "@/components/ui/Button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/Table";
+import Badge from "@/components/ui/Badge";
+import Input from "@/components/ui/Input";
+import Select from "@/components/ui/Select";
+import Modal from "@/components/ui/Modal";
+import {
+  Plus,
+  Package,
+  Edit,
+  Trash2,
+  Search,
+  Filter,
+  Leaf,
+  DollarSign,
+  AlertTriangle,
+  CheckCircle,
+  XCircle,
+  TrendingUp,
+  Eye,
+} from "lucide-react";
+import { formatCurrency } from "@/lib/utils";
+import type { Producto, CategoriaProducto, UnidadMedida } from "@/lib/types";
+import {
+  mockProductos,
+  mockCategoriasProductos,
+  mockMovimientosStock,
+} from "@/lib/mockData";
+
+// Tipo extendido para incluir categoría
+interface ProductoConCategoria extends Producto {
+  categoria?: CategoriaProducto;
+}
+
+export default function ProductosPage() {
+  // ============================================================================
+  // ESTADO
+  // ============================================================================
+
+  const [productos, setProductos] = useState<ProductoConCategoria[]>([]);
+  const [categorias, setCategorias] = useState<CategoriaProducto[]>([]);
+  const [showForm, setShowForm] = useState(false);
+  const [showDetalles, setShowDetalles] = useState(false);
+  const [productoSeleccionado, setProductoSeleccionado] = useState<ProductoConCategoria | null>(
+    null
+  );
+  const [saving, setSaving] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+
+  // Filtros
+  const [filtroCategoria, setFiltroCategoria] = useState<string>("TODOS");
+  const [filtroEstado, setFiltroEstado] = useState<"TODOS" | "ACTIVO" | "INACTIVO">("ACTIVO");
+  const [filtroStock, setFiltroStock] = useState<
+    "TODOS" | "CRITICO" | "BAJO" | "OK"
+  >("TODOS");
+  const [searchTerm, setSearchTerm] = useState("");
+
+  // Stats
+  const [stats, setStats] = useState({
+    totalProductos: 0,
+    productosActivos: 0,
+    stockBajo: 0,
+    stockCritico: 0,
+    valorTotal: 0,
+  });
+
+  // Formulario
+  const [formData, setFormData] = useState({
+    categoriaId: "",
+    nombre: "",
+    variedad: "",
+    descripcion: "",
+    unidadMedida: "GRAMOS" as UnidadMedida,
+    precioBase: "",
+    stockMinimo: "",
+    stockActual: "",
+    thc: "",
+    cbd: "",
+    activo: true,
+    notas: "",
+  });
+
+  // ============================================================================
+  // EFECTOS
+  // ============================================================================
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  useEffect(() => {
+    calculateStats();
+  }, [productos]);
+
+  // ============================================================================
+  // CARGA DE DATOS
+  // ============================================================================
+
+  const loadData = () => {
+    // TODO: Reemplazar con Firebase
+    const productosData = mockProductos.map((producto) => ({
+      ...producto,
+      categoria: mockCategoriasProductos.find((c) => c.id === producto.categoriaId),
+    }));
+
+    setProductos(productosData);
+    setCategorias(mockCategoriasProductos);
+  };
+
+  // ============================================================================
+  // CÁLCULO DE ESTADÍSTICAS
+  // ============================================================================
+
+  const calculateStats = () => {
+    const totalProductos = productos.length;
+    const productosActivos = productos.filter((p) => p.activo).length;
+
+    const stockBajo = productos.filter(
+      (p) =>
+        p.stockActual > 0 &&
+        p.stockActual <= p.stockMinimo &&
+        p.stockActual > p.stockMinimo * 0.5
+    ).length;
+
+    const stockCritico = productos.filter(
+      (p) => p.stockActual <= p.stockMinimo * 0.5
+    ).length;
+
+    const valorTotal = productos.reduce(
+      (sum, p) => sum + p.stockActual * p.precioBase,
+      0
+    );
+
+    setStats({
+      totalProductos,
+      productosActivos,
+      stockBajo,
+      stockCritico,
+      valorTotal,
+    });
+  };
+
+  // ============================================================================
+  // HELPERS
+  // ============================================================================
+
+  const getStockStatus = (
+    actual: number,
+    minimo: number
+  ): "critico" | "bajo" | "ok" => {
+    if (actual <= minimo * 0.5) return "critico";
+    if (actual <= minimo) return "bajo";
+    return "ok";
+  };
+
+  const getStockBadge = (producto: Producto) => {
+    const status = getStockStatus(producto.stockActual, producto.stockMinimo);
+
+    if (status === "critico") {
+      return (
+        <Badge variant="danger">
+          <XCircle className="h-3 w-3 mr-1" />
+          Crítico
+        </Badge>
+      );
+    } else if (status === "bajo") {
+      return (
+        <Badge variant="warning">
+          <AlertTriangle className="h-3 w-3 mr-1" />
+          Bajo
+        </Badge>
+      );
+    }
+    return (
+      <Badge variant="success">
+        <CheckCircle className="h-3 w-3 mr-1" />
+        OK
+      </Badge>
+    );
+  };
+
+  const getEstadoBadge = (activo: boolean) => {
+    if (activo) {
+      return (
+        <Badge variant="success">
+          <CheckCircle className="h-3 w-3 mr-1" />
+          Activo
+        </Badge>
+      );
+    }
+    return (
+      <Badge variant="default">
+        <XCircle className="h-3 w-3 mr-1" />
+        Inactivo
+      </Badge>
+    );
+  };
+
+  // ============================================================================
+  // FILTRADO
+  // ============================================================================
+
+  const productosFiltrados = productos.filter((producto) => {
+    // Filtro por categoría
+    if (filtroCategoria !== "TODOS" && producto.categoriaId !== filtroCategoria) {
+      return false;
+    }
+
+    // Filtro por estado
+    if (filtroEstado === "ACTIVO" && !producto.activo) return false;
+    if (filtroEstado === "INACTIVO" && producto.activo) return false;
+
+    // Filtro por stock
+    const status = getStockStatus(producto.stockActual, producto.stockMinimo);
+    if (filtroStock === "CRITICO" && status !== "critico") return false;
+    if (filtroStock === "BAJO" && status !== "bajo") return false;
+    if (filtroStock === "OK" && status !== "ok") return false;
+
+    // Búsqueda por texto
+    if (searchTerm) {
+      const search = searchTerm.toLowerCase();
+      return (
+        producto.nombre.toLowerCase().includes(search) ||
+        producto.variedad?.toLowerCase().includes(search) ||
+        producto.categoria?.nombre.toLowerCase().includes(search)
+      );
+    }
+
+    return true;
+  });
+
+  // ============================================================================
+  // HANDLERS
+  // ============================================================================
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSaving(true);
+
+    try {
+      const payload: Partial<Producto> = {
+        categoriaId: formData.categoriaId,
+        nombre: formData.nombre,
+        variedad: formData.variedad || undefined,
+        descripcion: formData.descripcion || undefined,
+        unidadMedida: formData.unidadMedida,
+        precioBase: parseFloat(formData.precioBase),
+        stockMinimo: parseFloat(formData.stockMinimo),
+        stockActual: parseFloat(formData.stockActual),
+        thc: formData.thc ? parseFloat(formData.thc) : undefined,
+        cbd: formData.cbd ? parseFloat(formData.cbd) : undefined,
+        activo: formData.activo,
+        notas: formData.notas || undefined,
+      };
+
+      if (editingId) {
+        // TODO: Implementar actualización con Firebase
+        console.log("Actualizar producto:", editingId, payload);
+      } else {
+        // TODO: Implementar creación con Firebase
+        console.log("Crear producto:", payload);
+      }
+
+      resetForm();
+      loadData();
+    } catch (error) {
+      console.error("Error guardando producto:", error);
+      alert("Error al guardar el producto.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleEdit = (producto: Producto) => {
+    setFormData({
+      categoriaId: producto.categoriaId,
+      nombre: producto.nombre,
+      variedad: producto.variedad || "",
+      descripcion: producto.descripcion || "",
+      unidadMedida: producto.unidadMedida,
+      precioBase: producto.precioBase.toString(),
+      stockMinimo: producto.stockMinimo.toString(),
+      stockActual: producto.stockActual.toString(),
+      thc: producto.thc?.toString() || "",
+      cbd: producto.cbd?.toString() || "",
+      activo: producto.activo,
+      notas: producto.notas || "",
+    });
+    setEditingId(producto.id);
+    setShowForm(true);
+  };
+
+  const handleDelete = async (producto: Producto) => {
+    if (!window.confirm(`¿Desactivar el producto "${producto.nombre}"?`)) return;
+
+    try {
+      // En lugar de eliminar, desactivar
+      // TODO: Implementar con Firebase
+      console.log("Desactivar producto:", producto.id);
+      loadData();
+    } catch (error) {
+      console.error("Error desactivando producto:", error);
+      alert("Error al desactivar el producto.");
+    }
+  };
+
+  const handleVerDetalles = (producto: ProductoConCategoria) => {
+    setProductoSeleccionado(producto);
+    setShowDetalles(true);
+  };
+
+  const resetForm = () => {
+    setFormData({
+      categoriaId: "",
+      nombre: "",
+      variedad: "",
+      descripcion: "",
+      unidadMedida: "GRAMOS",
+      precioBase: "",
+      stockMinimo: "",
+      stockActual: "",
+      thc: "",
+      cbd: "",
+      activo: true,
+      notas: "",
+    });
+    setEditingId(null);
+    setShowForm(false);
+  };
+
+  // ============================================================================
+  // RENDER MODAL DETALLES
+  // ============================================================================
+
+  const renderModalDetalles = () => {
+    if (!productoSeleccionado) return null;
+
+    const movimientos = mockMovimientosStock.filter(
+      (m) => m.productoId === productoSeleccionado.id
+    );
+
+    return (
+      <Modal
+        isOpen={showDetalles}
+        onClose={() => {
+          setShowDetalles(false);
+          setProductoSeleccionado(null);
+        }}
+        title={`Detalles de ${productoSeleccionado.nombre}`}
+        size="xl"
+      >
+        <div className="space-y-6">
+          {/* Información del Producto */}
+          <div>
+            <h3 className="text-lg font-semibold mb-3 text-slate-900 dark:text-slate-100">
+              Información del Producto
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <p className="text-sm font-medium text-slate-600 dark:text-slate-400">
+                  Categoría
+                </p>
+                <p className="text-slate-900 dark:text-slate-100">
+                  {productoSeleccionado.categoria?.nombre || "-"}
+                </p>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-slate-600 dark:text-slate-400">
+                  Variedad
+                </p>
+                <p className="text-slate-900 dark:text-slate-100">
+                  {productoSeleccionado.variedad || "-"}
+                </p>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-slate-600 dark:text-slate-400">
+                  Unidad de Medida
+                </p>
+                <p className="text-slate-900 dark:text-slate-100">
+                  {productoSeleccionado.unidadMedida}
+                </p>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-slate-600 dark:text-slate-400">
+                  Estado
+                </p>
+                <p>{getEstadoBadge(productoSeleccionado.activo)}</p>
+              </div>
+              {productoSeleccionado.thc && (
+                <div>
+                  <p className="text-sm font-medium text-slate-600 dark:text-slate-400">
+                    THC %
+                  </p>
+                  <p className="text-slate-900 dark:text-slate-100">
+                    {productoSeleccionado.thc}%
+                  </p>
+                </div>
+              )}
+              {productoSeleccionado.cbd && (
+                <div>
+                  <p className="text-sm font-medium text-slate-600 dark:text-slate-400">
+                    CBD %
+                  </p>
+                  <p className="text-slate-900 dark:text-slate-100">
+                    {productoSeleccionado.cbd}%
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Estadísticas */}
+          <div>
+            <h3 className="text-lg font-semibold mb-3 text-slate-900 dark:text-slate-100">
+              Inventario y Precios
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <Card>
+                <CardContent className="p-4">
+                  <p className="text-sm font-medium text-slate-600 dark:text-slate-400">
+                    Stock Actual
+                  </p>
+                  <p className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+                    {productoSeleccionado.stockActual}
+                  </p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    {productoSeleccionado.unidadMedida}
+                  </p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-4">
+                  <p className="text-sm font-medium text-slate-600 dark:text-slate-400">
+                    Stock Mínimo
+                  </p>
+                  <p className="text-2xl font-bold text-amber-600 dark:text-amber-400">
+                    {productoSeleccionado.stockMinimo}
+                  </p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-4">
+                  <p className="text-sm font-medium text-slate-600 dark:text-slate-400">
+                    Precio Base
+                  </p>
+                  <p className="text-2xl font-bold text-success-600 dark:text-success-400">
+                    {formatCurrency(productoSeleccionado.precioBase)}
+                  </p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-4">
+                  <p className="text-sm font-medium text-slate-600 dark:text-slate-400">
+                    Valor Total
+                  </p>
+                  <p className="text-2xl font-bold text-primary-600 dark:text-primary-400">
+                    {formatCurrency(
+                      productoSeleccionado.stockActual * productoSeleccionado.precioBase
+                    )}
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+
+          {/* Descripción */}
+          {productoSeleccionado.descripcion && (
+            <div>
+              <h3 className="text-lg font-semibold mb-3 text-slate-900 dark:text-slate-100">
+                Descripción
+              </h3>
+              <p className="text-slate-600 dark:text-slate-400 whitespace-pre-wrap">
+                {productoSeleccionado.descripcion}
+              </p>
+            </div>
+          )}
+
+          {/* Notas */}
+          {productoSeleccionado.notas && (
+            <div>
+              <h3 className="text-lg font-semibold mb-3 text-slate-900 dark:text-slate-100">
+                Notas
+              </h3>
+              <p className="text-slate-600 dark:text-slate-400 whitespace-pre-wrap">
+                {productoSeleccionado.notas}
+              </p>
+            </div>
+          )}
+
+          {/* Últimos Movimientos */}
+          <div>
+            <h3 className="text-lg font-semibold mb-3 text-slate-900 dark:text-slate-100">
+              Últimos Movimientos de Stock
+            </h3>
+            {movimientos.length === 0 ? (
+              <p className="text-center py-8 text-slate-500 dark:text-slate-400">
+                No hay movimientos registrados
+              </p>
+            ) : (
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Tipo</TableHead>
+                      <TableHead>Cantidad</TableHead>
+                      <TableHead>Motivo</TableHead>
+                      <TableHead className="text-right">Stock Resultante</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {movimientos.slice(0, 5).map((mov) => (
+                      <TableRow key={mov.id}>
+                        <TableCell>
+                          {mov.tipo === "INGRESO" || mov.tipo === "COSECHA" ? (
+                            <Badge variant="success">{mov.tipo}</Badge>
+                          ) : mov.tipo === "EGRESO" ? (
+                            <Badge variant="danger">{mov.tipo}</Badge>
+                          ) : (
+                            <Badge variant="default">{mov.tipo}</Badge>
+                          )}
+                        </TableCell>
+                        <TableCell
+                          className={
+                            mov.cantidad > 0
+                              ? "text-success-600 dark:text-success-400"
+                              : "text-danger-600 dark:text-danger-400"
+                          }
+                        >
+                          {mov.cantidad > 0 ? "+" : ""}
+                          {mov.cantidad}
+                        </TableCell>
+                        <TableCell className="text-slate-600 dark:text-slate-400">
+                          {mov.motivo}
+                        </TableCell>
+                        <TableCell className="text-right font-medium">
+                          {mov.stockNuevo}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </div>
+        </div>
+      </Modal>
+    );
+  };
+
+  // ============================================================================
+  // RENDER PRINCIPAL
+  // ============================================================================
+
+  return (
+    <div>
+      <Header title="Productos" subtitle="Catálogo y gestión de productos" />
+
+      <div className="p-4 sm:p-6 lg:p-8">
+        {/* ====================================================================== */}
+        {/* ESTADÍSTICAS */}
+        {/* ====================================================================== */}
+
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5 mb-8">
+          {/* Total Productos */}
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-slate-600 dark:text-slate-400">
+                    Total Productos
+                  </p>
+                  <p className="mt-2 text-3xl font-bold text-slate-900 dark:text-slate-100">
+                    {stats.totalProductos}
+                  </p>
+                </div>
+                <div className="rounded-full p-3 bg-primary-100 text-primary-600 dark:bg-primary-900/30 dark:text-primary-400">
+                  <Package className="h-6 w-6" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Productos Activos */}
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-slate-600 dark:text-slate-400">
+                    Activos
+                  </p>
+                  <p className="mt-2 text-3xl font-bold text-success-600 dark:text-success-400">
+                    {stats.productosActivos}
+                  </p>
+                </div>
+                <div className="rounded-full p-3 bg-success-100 text-success-600 dark:bg-success-900/30 dark:text-success-400">
+                  <CheckCircle className="h-6 w-6" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Stock Bajo */}
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-slate-600 dark:text-slate-400">
+                    Stock Bajo
+                  </p>
+                  <p className="mt-2 text-3xl font-bold text-amber-600 dark:text-amber-400">
+                    {stats.stockBajo}
+                  </p>
+                </div>
+                <div className="rounded-full p-3 bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400">
+                  <AlertTriangle className="h-6 w-6" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Stock Crítico */}
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-slate-600 dark:text-slate-400">
+                    Stock Crítico
+                  </p>
+                  <p className="mt-2 text-3xl font-bold text-danger-600 dark:text-danger-400">
+                    {stats.stockCritico}
+                  </p>
+                </div>
+                <div className="rounded-full p-3 bg-danger-100 text-danger-600 dark:bg-danger-900/30 dark:text-danger-400">
+                  <XCircle className="h-6 w-6" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Valor Total */}
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-slate-600 dark:text-slate-400">
+                    Valor Total
+                  </p>
+                  <p className="mt-2 text-xl font-bold text-primary-600 dark:text-primary-400">
+                    {formatCurrency(stats.valorTotal)}
+                  </p>
+                </div>
+                <div className="rounded-full p-3 bg-primary-100 text-primary-600 dark:bg-primary-900/30 dark:text-primary-400">
+                  <DollarSign className="h-6 w-6" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* ====================================================================== */}
+        {/* TABLA DE PRODUCTOS */}
+        {/* ====================================================================== */}
+
+        <Card>
+          <CardHeader>
+            <div className="flex flex-col gap-4">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <CardTitle>Catálogo de Productos</CardTitle>
+                <Button onClick={() => setShowForm(true)} size="sm">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Nuevo Producto
+                </Button>
+              </div>
+
+              {/* Filtros */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                <Input
+                  placeholder="Buscar por nombre, variedad..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+
+                <Select
+                  value={filtroCategoria}
+                  onChange={(e) => setFiltroCategoria(e.target.value)}
+                  options={[
+                    { value: "TODOS", label: "Todas las categorías" },
+                    ...categorias.map((c) => ({
+                      value: c.id,
+                      label: c.nombre,
+                    })),
+                  ]}
+                />
+
+                <Select
+                  value={filtroEstado}
+                  onChange={(e) => setFiltroEstado(e.target.value as any)}
+                  options={[
+                    { value: "TODOS", label: "Todos los estados" },
+                    { value: "ACTIVO", label: "Solo activos" },
+                    { value: "INACTIVO", label: "Solo inactivos" },
+                  ]}
+                />
+
+                <Select
+                  value={filtroStock}
+                  onChange={(e) => setFiltroStock(e.target.value as any)}
+                  options={[
+                    { value: "TODOS", label: "Todo el stock" },
+                    { value: "CRITICO", label: "Stock crítico" },
+                    { value: "BAJO", label: "Stock bajo" },
+                    { value: "OK", label: "Stock OK" },
+                  ]}
+                />
+              </div>
+            </div>
+          </CardHeader>
+
+          <CardContent>
+            {productosFiltrados.length === 0 ? (
+              <div className="text-center py-12 text-slate-500 dark:text-slate-400">
+                <Package className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                <p className="text-lg font-medium">No hay productos registrados</p>
+                <p className="text-sm mt-1">
+                  {searchTerm || filtroCategoria !== "TODOS" || filtroEstado !== "TODOS"
+                    ? "Intenta cambiar los filtros de búsqueda"
+                    : "Comienza agregando tu primer producto"}
+                </p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <Table className="min-w-[1100px]">
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Producto</TableHead>
+                      <TableHead>Categoría</TableHead>
+                      <TableHead>Variedad</TableHead>
+                      <TableHead className="text-right">Stock</TableHead>
+                      <TableHead className="text-right">Mín.</TableHead>
+                      <TableHead>Estado Stock</TableHead>
+                      <TableHead className="text-right">Precio Base</TableHead>
+                      <TableHead className="text-right">Valor Total</TableHead>
+                      <TableHead>Estado</TableHead>
+                      <TableHead className="text-right">Acciones</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {productosFiltrados.map((producto) => (
+                      <TableRow key={producto.id}>
+                        <TableCell className="font-medium">
+                          <div className="flex items-center gap-2">
+                            {producto.categoria?.tipo === 'FLOR' && (
+                              <Leaf className="h-4 w-4 text-green-600 dark:text-green-400" />
+                            )}
+                            {producto.nombre}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="default">
+                            {producto.categoria?.nombre || "Sin categoría"}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-slate-600 dark:text-slate-400">
+                          {producto.variedad || "-"}
+                        </TableCell>
+                        <TableCell className="text-right font-medium">
+                          {producto.stockActual}
+                        </TableCell>
+                        <TableCell className="text-right text-slate-600 dark:text-slate-400">
+                          {producto.stockMinimo}
+                        </TableCell>
+                        <TableCell>{getStockBadge(producto)}</TableCell>
+                        <TableCell className="text-right font-medium text-success-600 dark:text-success-400">
+                          {formatCurrency(producto.precioBase)}
+                        </TableCell>
+                        <TableCell className="text-right font-medium text-primary-600 dark:text-primary-400">
+                          {formatCurrency(producto.stockActual * producto.precioBase)}
+                        </TableCell>
+                        <TableCell>{getEstadoBadge(producto.activo)}</TableCell>
+                        <TableCell className="text-right">
+                          <div className="inline-flex items-center gap-2">
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => handleVerDetalles(producto)}
+                            >
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => handleEdit(producto)}
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => handleDelete(producto)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* ======================================================================== */}
+      {/* MODAL DE FORMULARIO */}
+      {/* ======================================================================== */}
+
+      <Modal
+        isOpen={showForm}
+        onClose={resetForm}
+        title={editingId ? "Editar Producto" : "Nuevo Producto"}
+        size="xl"
+      >
+        <form onSubmit={handleSubmit}>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Categoría */}
+            <Select
+              label="Categoría"
+              value={formData.categoriaId}
+              onChange={(e) =>
+                setFormData({ ...formData, categoriaId: e.target.value })
+              }
+              options={[
+                { value: "", label: "Selecciona una categoría" },
+                ...categorias.map((c) => ({
+                  value: c.id,
+                  label: c.nombre,
+                })),
+              ]}
+              required
+            />
+
+            {/* Nombre */}
+            <Input
+              label="Nombre del Producto"
+              value={formData.nombre}
+              onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
+              placeholder="Ej: Gellato, Blue Dream..."
+              required
+            />
+
+            {/* Variedad */}
+            <Input
+              label="Variedad"
+              value={formData.variedad}
+              onChange={(e) => setFormData({ ...formData, variedad: e.target.value })}
+              placeholder="Ej: Gellato 1, Blue Dream Haze..."
+            />
+
+            {/* Unidad de Medida */}
+            <Select
+              label="Unidad de Medida"
+              value={formData.unidadMedida}
+              onChange={(e) =>
+                setFormData({ ...formData, unidadMedida: e.target.value as UnidadMedida })
+              }
+              options={[
+                { value: "GRAMOS", label: "Gramos (g)" },
+                { value: "UNIDADES", label: "Unidades" },
+                { value: "KITS", label: "Kits" },
+              ]}
+            />
+
+            {/* Precio Base */}
+            <Input
+              label="Precio Base"
+              type="number"
+              step="0.01"
+              min="0"
+              value={formData.precioBase}
+              onChange={(e) => setFormData({ ...formData, precioBase: e.target.value })}
+              placeholder="0.00"
+              required
+            />
+
+            {/* Stock Mínimo */}
+            <Input
+              label="Stock Mínimo"
+              type="number"
+              step="0.01"
+              min="0"
+              value={formData.stockMinimo}
+              onChange={(e) => setFormData({ ...formData, stockMinimo: e.target.value })}
+              placeholder="0"
+              required
+            />
+
+            {/* Stock Actual */}
+            <Input
+              label="Stock Actual"
+              type="number"
+              step="0.01"
+              min="0"
+              value={formData.stockActual}
+              onChange={(e) => setFormData({ ...formData, stockActual: e.target.value })}
+              placeholder="0"
+              required
+            />
+
+            {/* THC % */}
+            <Input
+              label="THC %"
+              type="number"
+              step="0.1"
+              min="0"
+              max="100"
+              value={formData.thc}
+              onChange={(e) => setFormData({ ...formData, thc: e.target.value })}
+              placeholder="0.0"
+            />
+
+            {/* CBD % */}
+            <Input
+              label="CBD %"
+              type="number"
+              step="0.1"
+              min="0"
+              max="100"
+              value={formData.cbd}
+              onChange={(e) => setFormData({ ...formData, cbd: e.target.value })}
+              placeholder="0.0"
+            />
+
+            {/* Checkbox: Activo */}
+            <div className="flex items-center gap-2 pt-6">
+              <input
+                type="checkbox"
+                id="activo"
+                checked={formData.activo}
+                onChange={(e) =>
+                  setFormData({ ...formData, activo: e.target.checked })
+                }
+                className="h-4 w-4 rounded border-slate-300 text-primary-600 focus:ring-primary-500"
+              />
+              <label
+                htmlFor="activo"
+                className="text-sm font-medium text-slate-700 dark:text-slate-300"
+              >
+                Producto activo
+              </label>
+            </div>
+
+            {/* Descripción */}
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                Descripción
+              </label>
+              <textarea
+                value={formData.descripcion}
+                onChange={(e) =>
+                  setFormData({ ...formData, descripcion: e.target.value })
+                }
+                placeholder="Descripción del producto..."
+                rows={3}
+                className="w-full rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+              />
+            </div>
+
+            {/* Notas */}
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                Notas
+              </label>
+              <textarea
+                value={formData.notas}
+                onChange={(e) => setFormData({ ...formData, notas: e.target.value })}
+                placeholder="Notas adicionales sobre el producto..."
+                rows={2}
+                className="w-full rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+              />
+            </div>
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-2 mt-6">
+            <Button type="submit" disabled={saving}>
+              {saving
+                ? "Guardando..."
+                : editingId
+                ? "Actualizar Producto"
+                : "Guardar Producto"}
+            </Button>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={resetForm}
+              disabled={saving}
+            >
+              Cancelar
+            </Button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* Modal de Detalles */}
+      {renderModalDetalles()}
+    </div>
+  );
+}

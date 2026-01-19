@@ -16,7 +16,13 @@
       "Bash(git push:*)",
       "Bash(del vercel.json)",
       "Bash(npm install)",
-      "Bash(npm run build:*)"
+      "Bash(npm run build:*)",
+      "Bash(python -c:*)",
+      "Bash(pip install:*)",
+      "Bash(python analyze_excel.py:*)",
+      "Bash(python analyze_detailed.py:*)",
+      "Bash(python final_analysis.py:*)",
+      "Bash(python:*)"
     ],
     "deny": [],
     "ask": []

@@ -8,6 +8,7 @@ import {
   ShoppingCart,
   Package,
   CreditCard,
+  Users,
   LogOut,
   Moon,
   Sun,
@@ -25,6 +26,16 @@ const menuItems = [
     name: "Ventas",
     href: "/ventas",
     icon: ShoppingCart,
+  },
+  {
+    name: "Socios",
+    href: "/socios",
+    icon: Users,
+  },
+  {
+    name: "Productos",
+    href: "/productos",
+    icon: Package,
   },
   {
     name: "Stock",
