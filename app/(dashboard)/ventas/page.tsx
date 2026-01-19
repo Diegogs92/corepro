@@ -225,7 +225,7 @@ export default function VentasPage() {
     setFormData({
       fecha: venta.fecha.toISOString().split("T")[0],
       socioId: venta.socioId,
-      metodoPago: venta.metodoPago || "EFECTIVO",
+      metodoPago: (venta.metodoPago || "EFECTIVO") as any,
       descuento: venta.descuento.toString(),
       notas: venta.notas || "",
     });

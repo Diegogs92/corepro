@@ -132,8 +132,8 @@ class FirebaseCollection<T extends { id: string }> {
     const snapshot = await getDocs(q);
     return snapshot.docs.map((doc) => ({
       id: doc.id,
-      ...fromFirebase<T>(doc.data()),
-    }));
+      ...fromFirebase<Omit<T, 'id'>>(doc.data()),
+    } as T));
   }
 
   /**
@@ -147,8 +147,8 @@ class FirebaseCollection<T extends { id: string }> {
 
     return {
       id: docSnap.id,
-      ...fromFirebase<T>(docSnap.data()),
-    };
+      ...fromFirebase<Omit<T, 'id'>>(docSnap.data()),
+    } as T;
   }
 
   /**

@@ -15,7 +15,7 @@ import {
 import Badge from "@/components/ui/Badge";
 import Input from "@/components/ui/Input";
 import Select from "@/components/ui/Select";
-import { Plus, CreditCard, TrendingDown } from "lucide-react";
+import { Plus, CreditCard, TrendingDown, Edit, Trash2 } from "lucide-react";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import type { Gasto } from "@/lib/types";
 import { startOfMonth, endOfMonth } from "date-fns";
@@ -26,6 +26,7 @@ export default function GastosPage() {
   const [gastos, setGastos] = useState<Gasto[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
     fecha: new Date().toISOString().split("T")[0],
@@ -71,13 +72,15 @@ export default function GastosPage() {
     setSaving(true);
 
     try {
-      mockStorage.saveGasto({
+      const payload = {
         fecha: new Date(formData.fecha),
         categoria: formData.categoria,
         concepto: formData.concepto,
         monto: parseFloat(formData.monto),
-        createdAt: new Date(),
-      });
+      };
+
+      // TODO: Implementar con Firebase service
+      console.log('Guardar gasto:', payload);
 
       setFormData({
         fecha: new Date().toISOString().split("T")[0],
@@ -87,6 +90,7 @@ export default function GastosPage() {
       });
 
       setShowForm(false);
+      setEditingId(null);
       loadGastos();
     } catch (error) {
       console.error("Error guardando gasto:", error);
@@ -118,6 +122,37 @@ export default function GastosPage() {
     return colors[categoria] || "default";
   };
 
+  const handleEdit = (gasto: Gasto) => {
+    setFormData({
+      fecha: gasto.fecha.toISOString().split("T")[0],
+      categoria: "servicios" as any,  // TODO: mapear categorías
+      concepto: gasto.detalle,
+      monto: gasto.monto.toString(),
+    });
+    setEditingId(gasto.id);
+    setShowForm(true);
+  };
+
+  const handleCancelEdit = () => {
+    setFormData({
+      fecha: new Date().toISOString().split("T")[0],
+      categoria: "servicios",
+      concepto: "",
+      monto: "",
+    });
+    setEditingId(null);
+    setShowForm(false);
+  };
+
+  const handleDelete = (gasto: Gasto) => {
+    const confirmDelete = window.confirm(
+      `Eliminar el gasto "${gasto.detalle}"?`
+    );
+    if (!confirmDelete) return;
+    // TODO: Implementar con Firebase service
+    console.log('Eliminar gasto:', gasto.id);
+  };
+
   return (
     <div>
       <Header title="Gastos" subtitle="Registro y control de gastos operativos (Modo Demo)" />
@@ -147,7 +182,13 @@ export default function GastosPage() {
           <CardHeader>
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <CardTitle>Historial de Gastos</CardTitle>
-              <Button onClick={() => setShowForm(!showForm)} size="sm">
+              <Button
+                onClick={() => {
+                  setEditingId(null);
+                  setShowForm(true);
+                }}
+                size="sm"
+              >
                 <Plus className="h-4 w-4 mr-2" />
                 Nuevo Gasto
               </Button>
@@ -161,13 +202,14 @@ export default function GastosPage() {
                 <p className="text-lg font-medium">No hay gastos registrados</p>
               </div>
             ) : (
-              <Table className="min-w-[600px]">
+              <Table className="min-w-[680px]">
                 <TableHeader>
                   <TableRow>
                     <TableHead>Fecha</TableHead>
                     <TableHead>Categoría</TableHead>
                     <TableHead>Concepto</TableHead>
                     <TableHead className="text-right">Monto</TableHead>
+                    <TableHead className="text-right">Acciones</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -177,15 +219,33 @@ export default function GastosPage() {
                         {formatDate(gasto.fecha)}
                       </TableCell>
                       <TableCell>
-                        <Badge variant={getCategoriaColor(gasto.categoria)}>
-                          {getCategoriaLabel(gasto.categoria)}
+                        <Badge variant="default">
+                          {gasto.detalle}
                         </Badge>
                       </TableCell>
                       <TableCell className="font-medium">
-                        {gasto.concepto}
+                        {gasto.detalle}
                       </TableCell>
                       <TableCell className="text-right font-medium text-danger-600 dark:text-danger-400">
                         {formatCurrency(gasto.monto)}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="inline-flex items-center gap-2">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => handleEdit(gasto)}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => handleDelete(gasto)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -196,7 +256,12 @@ export default function GastosPage() {
         </Card>
       </div>
 
-      <Modal isOpen={showForm} onClose={() => setShowForm(false)} title="Nuevo Gasto" size="lg">
+      <Modal
+        isOpen={showForm}
+        onClose={handleCancelEdit}
+        title={editingId ? "Editar Gasto" : "Nuevo Gasto"}
+        size="lg"
+      >
         <form onSubmit={handleSubmit}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Input
@@ -253,12 +318,12 @@ export default function GastosPage() {
 
           <div className="flex flex-col sm:flex-row gap-2 mt-6">
             <Button type="submit" disabled={saving}>
-              {saving ? "Guardando..." : "Guardar Gasto"}
+              {saving ? "Guardando..." : editingId ? "Actualizar Gasto" : "Guardar Gasto"}
             </Button>
             <Button
               type="button"
               variant="secondary"
-              onClick={() => setShowForm(false)}
+              onClick={handleCancelEdit}
               disabled={saving}
             >
               Cancelar

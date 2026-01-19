@@ -52,7 +52,7 @@ export default function DashboardPage() {
       const ventasMes = ventas.filter(
         (v) => v.fecha >= monthStart && v.fecha <= monthEnd
       );
-      const ingresosMes = ventasMes.reduce((sum, venta) => sum + venta.monto, 0);
+      const ingresosMes = ventasMes.reduce((sum, venta) => sum + venta.total, 0);
 
       // Cargar gastos del mes (MODO DEMO)
       const gastos = mockStorage.getGastos();
@@ -64,11 +64,11 @@ export default function DashboardPage() {
       // Cargar productos (MODO DEMO)
       const productos = mockStorage.getProductos();
       const productosStockBajo = productos.filter(
-        (p) => getStockStatus(p.cantidadActual, p.stockMinimo) !== "ok"
+        (p) => getStockStatus(p.stockActual, p.stockMinimo) !== "ok"
       );
 
       const productosStockCritico = productos.filter(
-        (p) => getStockStatus(p.cantidadActual, p.stockMinimo) === "critico"
+        (p) => getStockStatus(p.stockActual, p.stockMinimo) === "critico"
       ).length;
 
       // Últimas transacciones
@@ -76,13 +76,13 @@ export default function DashboardPage() {
         ...ventas.slice(0, 3).map((v) => ({
           tipo: "venta" as const,
           fecha: v.fecha,
-          concepto: v.concepto,
-          monto: v.monto,
+          concepto: `Venta #${v.numero}`,
+          monto: v.total,
         })),
         ...gastos.slice(0, 2).map((g) => ({
           tipo: "gasto" as const,
           fecha: g.fecha,
-          concepto: g.concepto,
+          concepto: g.detalle,
           monto: g.monto,
         })),
       ]
@@ -180,7 +180,7 @@ export default function DashboardPage() {
                   <TableBody>
                     {productosStockBajo.map((producto) => {
                       const status = getStockStatus(
-                        producto.cantidadActual,
+                        producto.stockActual,
                         producto.stockMinimo
                       );
                       return (
@@ -188,7 +188,7 @@ export default function DashboardPage() {
                           <TableCell className="font-medium">
                             {producto.nombre}
                           </TableCell>
-                          <TableCell>{producto.cantidadActual}</TableCell>
+                          <TableCell>{producto.stockActual}</TableCell>
                           <TableCell>
                             <Badge
                               variant={

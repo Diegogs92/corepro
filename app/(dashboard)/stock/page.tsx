@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/Table";
 import Badge from "@/components/ui/Badge";
 import Input from "@/components/ui/Input";
-import { Plus, Package, Search, Edit } from "lucide-react";
+import { Plus, Package, Search, Edit, Trash2 } from "lucide-react";
 import { getStockStatus } from "@/lib/utils";
 import type { Producto } from "@/lib/types";
 import { mockStorage } from "@/lib/mockData";
@@ -66,23 +66,8 @@ export default function StockPage() {
     setSaving(true);
 
     try {
-      if (editingId) {
-        mockStorage.updateProducto(editingId, {
-          nombre: formData.nombre,
-          descripcion: formData.descripcion || "",
-          cantidadActual: parseInt(formData.cantidadActual),
-          stockMinimo: parseInt(formData.stockMinimo),
-          precioUnitario: parseFloat(formData.precioUnitario),
-        });
-      } else {
-        mockStorage.saveProducto({
-          nombre: formData.nombre,
-          descripcion: formData.descripcion || "",
-          cantidadActual: parseInt(formData.cantidadActual),
-          stockMinimo: parseInt(formData.stockMinimo),
-          precioUnitario: parseFloat(formData.precioUnitario),
-        });
-      }
+      // TODO: Implementar con Firebase service
+      console.log('Guardar producto:', formData);
 
       setFormData({
         nombre: "",
@@ -107,9 +92,9 @@ export default function StockPage() {
     setFormData({
       nombre: producto.nombre,
       descripcion: producto.descripcion || "",
-      cantidadActual: producto.cantidadActual.toString(),
+      cantidadActual: producto.stockActual.toString(),
       stockMinimo: producto.stockMinimo.toString(),
-      precioUnitario: producto.precioUnitario.toString(),
+      precioUnitario: producto.precioBase.toString(),
     });
     setEditingId(producto.id);
     setShowForm(true);
@@ -127,8 +112,17 @@ export default function StockPage() {
     setShowForm(false);
   };
 
+  const handleDelete = (producto: Producto) => {
+    const confirmDelete = window.confirm(
+      `Eliminar el producto "${producto.nombre}"?`
+    );
+    if (!confirmDelete) return;
+    // TODO: Implementar con Firebase service
+    console.log('Eliminar producto:', producto.id);
+  };
+
   const getStatusBadge = (producto: Producto) => {
-    const status = getStockStatus(producto.cantidadActual, producto.stockMinimo);
+    const status = getStockStatus(producto.stockActual, producto.stockMinimo);
 
     if (status === "critico") {
       return <Badge variant="danger">Crítico</Badge>;
@@ -158,7 +152,13 @@ export default function StockPage() {
                     className="pl-10"
                   />
                 </div>
-                <Button onClick={() => setShowForm(!showForm)} size="md">
+                <Button
+                  onClick={() => {
+                    setEditingId(null);
+                    setShowForm(true);
+                  }}
+                  size="md"
+                >
                   <Plus className="h-4 w-4 mr-2" />
                   Agregar Producto
                 </Button>
@@ -197,17 +197,26 @@ export default function StockPage() {
                       <TableCell className="text-slate-600 dark:text-slate-400">
                         {producto.descripcion || "-"}
                       </TableCell>
-                      <TableCell>{producto.cantidadActual}</TableCell>
+                      <TableCell>{producto.stockActual}</TableCell>
                       <TableCell>{producto.stockMinimo}</TableCell>
                       <TableCell>{getStatusBadge(producto)}</TableCell>
                       <TableCell>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => handleEdit(producto)}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
+                        <div className="inline-flex items-center gap-2">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => handleEdit(producto)}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => handleDelete(producto)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}
