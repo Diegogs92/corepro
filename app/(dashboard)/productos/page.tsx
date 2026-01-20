@@ -17,6 +17,7 @@ import Input from "@/components/ui/Input";
 import Select from "@/components/ui/Select";
 import Modal from "@/components/ui/Modal";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
+import PriceInput from "@/components/ui/PriceInput";
 import {
   Plus,
   Package,
@@ -90,6 +91,7 @@ export default function ProductosPage() {
     descripcion: "",
     unidadMedida: "GRAMOS" as UnidadMedida,
     precioBase: "",
+    precioBaseCurrency: "ARS" as "ARS" | "USD",
     stockMinimo: "",
     stockActual: "",
     thc: "",
@@ -318,6 +320,7 @@ export default function ProductosPage() {
       descripcion: producto.descripcion || "",
       unidadMedida: producto.unidadMedida,
       precioBase: producto.precioBase.toString(),
+      precioBaseCurrency: "ARS", // Default to ARS for existing products
       stockMinimo: producto.stockMinimo.toString(),
       stockActual: producto.stockActual.toString(),
       thc: producto.thc?.toString() || "",
@@ -368,6 +371,7 @@ export default function ProductosPage() {
       descripcion: "",
       unidadMedida: "GRAMOS",
       precioBase: "",
+      precioBaseCurrency: "ARS",
       stockMinimo: "",
       stockActual: "",
       thc: "",
@@ -924,14 +928,16 @@ export default function ProductosPage() {
             />
 
             {/* Precio Base */}
-            <Input
+            <PriceInput
               label="Precio Base"
-              type="number"
-              step="0.01"
-              min="0"
-              value={formData.precioBase}
-              onChange={(e) => setFormData({ ...formData, precioBase: e.target.value })}
-              placeholder="0.00"
+              value={parseFloat(formData.precioBase) || 0}
+              onChange={(value, currency) =>
+                setFormData({
+                  ...formData,
+                  precioBase: value.toString(),
+                  precioBaseCurrency: currency
+                })
+              }
               required
             />
 

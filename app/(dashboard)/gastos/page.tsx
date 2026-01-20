@@ -17,6 +17,7 @@ import Input from "@/components/ui/Input";
 import Select from "@/components/ui/Select";
 import Modal from "@/components/ui/Modal";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
+import PriceInput from "@/components/ui/PriceInput";
 import {
   Plus,
   TrendingDown,
@@ -83,6 +84,7 @@ export default function GastosPage() {
     detalle: "",
     proveedor: "",
     monto: "",
+    montoCurrency: "ARS" as "ARS" | "USD",
     metodoPago: "EFECTIVO" as MetodoPago,
     pagado: false,
     fechaPago: "",
@@ -283,6 +285,7 @@ export default function GastosPage() {
       detalle: gasto.detalle,
       proveedor: gasto.proveedor || "",
       monto: gasto.monto.toString(),
+      montoCurrency: "ARS", // Default to ARS for existing expenses
       metodoPago: gasto.metodoPago,
       pagado: gasto.pagado,
       fechaPago: gasto.fechaPago ? gasto.fechaPago.toISOString().split("T")[0] : "",
@@ -324,6 +327,7 @@ export default function GastosPage() {
       detalle: "",
       proveedor: "",
       monto: "",
+      montoCurrency: "ARS",
       metodoPago: "EFECTIVO",
       pagado: false,
       fechaPago: "",
@@ -711,14 +715,16 @@ export default function GastosPage() {
             />
 
             {/* Monto */}
-            <Input
+            <PriceInput
               label="Monto"
-              type="number"
-              step="0.01"
-              min="0"
-              value={formData.monto}
-              onChange={(e) => setFormData({ ...formData, monto: e.target.value })}
-              placeholder="0.00"
+              value={parseFloat(formData.monto) || 0}
+              onChange={(value, currency) =>
+                setFormData({
+                  ...formData,
+                  monto: value.toString(),
+                  montoCurrency: currency
+                })
+              }
               required
             />
 

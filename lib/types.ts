@@ -148,6 +148,7 @@ export interface Producto {
   descripcion?: string;
   unidadMedida: UnidadMedida;
   precioBase: number;
+  precioBaseCurrency?: 'ARS' | 'USD'; // Moneda del precio base
   stockMinimo: number;
   stockActual: number;
   activo: boolean;
@@ -249,6 +250,7 @@ export interface Gasto {
   detalle: string;
   proveedor?: string;
   monto: number;
+  montoCurrency?: 'ARS' | 'USD'; // Moneda del monto
   metodoPago: MetodoPago;
   pagado: boolean;
   fechaPago?: Date;
