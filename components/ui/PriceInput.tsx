@@ -18,7 +18,7 @@ export default function PriceInput({
   required = false,
   disabled = false,
   className = "",
-  exchangeRate = 1000, // Tipo de cambio por defecto (será reemplazado por uno dinámico)
+  exchangeRate = 1495, // Tipo de cambio por defecto (Dólar Blue - actualizado 20/01/2026)
 }: PriceInputProps) {
   const [currency, setCurrency] = useState<"ARS" | "USD">("ARS");
   const [inputValue, setInputValue] = useState(value.toString());
