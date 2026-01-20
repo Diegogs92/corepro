@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Header from "@/components/layout/Header";
 import { Card } from "@/components/ui/Card";
 import {
@@ -110,7 +110,7 @@ export default function UsuariosPage() {
     }
   };
 
-  const calculateStats = () => {
+  const calculateStats = useCallback(() => {
     const totalUsuarios = usuarios.length;
     const usuariosActivos = usuarios.filter((u) => u.activo).length;
     const usuariosInactivos = usuarios.filter((u) => !u.activo).length;
@@ -128,7 +128,7 @@ export default function UsuariosPage() {
       vendedores,
       operadores,
     });
-  };
+  }, [usuarios]);
 
   const getRolBadge = (rol: RolUsuario) => {
     switch (rol) {

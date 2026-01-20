@@ -36,7 +36,7 @@ export default function Header({ title, subtitle }: HeaderProps) {
           </div>
           <Button
             onClick={handleSignOut}
-            variant="outline"
+            variant="secondary"
             size="sm"
             className="flex items-center gap-2"
           >

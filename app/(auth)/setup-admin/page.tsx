@@ -139,7 +139,7 @@ export default function SetupAdminPage() {
                   setError("");
                   setSuccess(false);
                 }}
-                variant="outline"
+                variant="secondary"
                 className="w-full"
                 size="lg"
               >

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import Header from "@/components/layout/Header";
 import Button from "@/components/ui/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
@@ -89,7 +89,7 @@ export default function VentasPage() {
     setVentas(ventasConItems);
   };
 
-  const calculateStats = () => {
+  const calculateStats = useCallback(() => {
     const now = new Date();
     const dayStart = startOfDay(now);
     const dayEnd = endOfDay(now);
@@ -108,7 +108,7 @@ export default function VentasPage() {
     const cantidadVentas = ventas.length;
 
     setStats({ totalDia, totalMes, totalGeneral, cantidadVentas });
-  };
+  }, [ventas]);
 
   const agregarItem = () => {
     setItems([...items, { productoId: "", cantidad: "1", precioUnitario: "0" }]);
