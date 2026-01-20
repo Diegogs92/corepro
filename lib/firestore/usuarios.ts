@@ -3,6 +3,7 @@ import {
   doc,
   getDocs,
   getDoc,
+  setDoc,
   addDoc,
   updateDoc,
   deleteDoc,
@@ -123,7 +124,7 @@ export const createUsuario = async (
     };
 
     // Usar el UID de Firebase Auth como ID del documento en Firestore
-    await updateDoc(doc(db, "usuarios", userCredential.user.uid), usuarioData);
+    await setDoc(doc(db, "usuarios", userCredential.user.uid), usuarioData);
 
     return {
       id: userCredential.user.uid,

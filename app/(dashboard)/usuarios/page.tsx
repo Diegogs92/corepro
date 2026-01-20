@@ -34,7 +34,7 @@ import {
 } from "lucide-react";
 import { formatDate } from "@/lib/utils";
 import type { Usuario, RolUsuario } from "@/lib/types";
-import { mockUsuarios } from "@/lib/mockData";
+import { getUsuarios, createUsuario, updateUsuario, deleteUsuario } from "@/lib/firestore/usuarios";
 
 export default function UsuariosPage() {
   // ============================================================================
@@ -100,9 +100,8 @@ export default function UsuariosPage() {
   const loadUsuarios = async () => {
     setLoading(true);
     try {
-      // TODO: Reemplazar con llamada a Firebase
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      setUsuarios(mockUsuarios);
+      const usuariosFromFirestore = await getUsuarios();
+      setUsuarios(usuariosFromFirestore);
     } catch (error) {
       console.error("Error al cargar usuarios:", error);
     } finally {
@@ -174,7 +173,19 @@ export default function UsuariosPage() {
 
     try {
       if (editingId) {
-        // Actualizar usuario existente
+        // Actualizar usuario existente en Firestore
+        await updateUsuario(editingId, {
+          username: formData.username,
+          nombre: formData.nombre,
+          apellido: formData.apellido || undefined,
+          email: formData.email || undefined,
+          rol: formData.rol,
+          telefono: formData.telefono || undefined,
+          activo: formData.activo,
+          notas: formData.notas || undefined,
+        });
+
+        // Actualizar estado local
         setUsuarios(usuarios.map(u =>
           u.id === editingId
             ? {
@@ -190,28 +201,34 @@ export default function UsuariosPage() {
               }
             : u
         ));
-        console.log("Usuario actualizado:", editingId);
       } else {
-        // Crear nuevo usuario
-        const nuevoUsuario: Usuario = {
-          id: `usr-${Date.now()}`,
+        // Crear nuevo usuario en Firestore
+        if (!formData.password) {
+          alert("La contraseña es requerida para crear un nuevo usuario");
+          setSaving(false);
+          return;
+        }
+
+        const nuevoUsuario = await createUsuario({
           username: formData.username,
+          password: formData.password,
           nombre: formData.nombre,
           apellido: formData.apellido || undefined,
           email: formData.email || undefined,
           rol: formData.rol,
           telefono: formData.telefono || undefined,
           activo: formData.activo,
-          fechaCreacion: new Date(),
           notas: formData.notas || undefined,
-        };
+        });
+
+        // Actualizar estado local
         setUsuarios([...usuarios, nuevoUsuario]);
-        console.log("Usuario creado:", nuevoUsuario);
       }
 
       resetForm();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error al guardar usuario:", error);
+      alert(error.message || "Error al guardar usuario");
     } finally {
       setSaving(false);
     }
@@ -243,14 +260,21 @@ export default function UsuariosPage() {
 
     setDeleting(true);
     try {
-      // Eliminar usuario del estado
-      setUsuarios(usuarios.filter(u => u.id !== usuarioToDelete.id));
-      console.log("Usuario eliminado:", usuarioToDelete.id);
+      // Eliminar usuario en Firestore (marca como inactivo)
+      await deleteUsuario(usuarioToDelete.id);
+
+      // Actualizar estado local
+      setUsuarios(usuarios.map(u =>
+        u.id === usuarioToDelete.id
+          ? { ...u, activo: false }
+          : u
+      ));
 
       setShowConfirmDelete(false);
       setUsuarioToDelete(null);
     } catch (error) {
       console.error("Error al eliminar usuario:", error);
+      alert("Error al eliminar usuario");
     } finally {
       setDeleting(false);
     }
