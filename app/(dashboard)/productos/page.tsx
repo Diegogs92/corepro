@@ -16,6 +16,7 @@ import Badge from "@/components/ui/Badge";
 import Input from "@/components/ui/Input";
 import Select from "@/components/ui/Select";
 import Modal from "@/components/ui/Modal";
+import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import {
   Plus,
   Package,
@@ -58,6 +59,11 @@ export default function ProductosPage() {
   );
   const [saving, setSaving] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+
+  // Estado para confirmación de eliminación
+  const [showConfirmDelete, setShowConfirmDelete] = useState(false);
+  const [productoToDelete, setProductoToDelete] = useState<ProductoConCategoria | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   // Filtros
   const [filtroCategoria, setFiltroCategoria] = useState<string>("TODOS");
@@ -250,31 +256,52 @@ export default function ProductosPage() {
     setSaving(true);
 
     try {
-      const payload: Partial<Producto> = {
-        categoriaId: formData.categoriaId,
-        nombre: formData.nombre,
-        variedad: formData.variedad || undefined,
-        descripcion: formData.descripcion || undefined,
-        unidadMedida: formData.unidadMedida,
-        precioBase: parseFloat(formData.precioBase),
-        stockMinimo: parseFloat(formData.stockMinimo),
-        stockActual: parseFloat(formData.stockActual),
-        thc: formData.thc ? parseFloat(formData.thc) : undefined,
-        cbd: formData.cbd ? parseFloat(formData.cbd) : undefined,
-        activo: formData.activo,
-        notas: formData.notas || undefined,
-      };
-
       if (editingId) {
-        // TODO: Implementar actualización con Firebase
-        console.log("Actualizar producto:", editingId, payload);
+        // Actualizar producto existente
+        setProductos(
+          productos.map((p) =>
+            p.id === editingId
+              ? {
+                  ...p,
+                  categoriaId: formData.categoriaId,
+                  nombre: formData.nombre,
+                  variedad: formData.variedad || undefined,
+                  descripcion: formData.descripcion || undefined,
+                  unidadMedida: formData.unidadMedida,
+                  precioBase: parseFloat(formData.precioBase),
+                  stockMinimo: parseFloat(formData.stockMinimo),
+                  stockActual: parseFloat(formData.stockActual),
+                  thc: formData.thc ? parseFloat(formData.thc) : undefined,
+                  cbd: formData.cbd ? parseFloat(formData.cbd) : undefined,
+                  activo: formData.activo,
+                  notas: formData.notas || undefined,
+                  categoria: categorias.find((c) => c.id === formData.categoriaId),
+                }
+              : p
+          )
+        );
       } else {
-        // TODO: Implementar creación con Firebase
-        console.log("Crear producto:", payload);
+        // Crear nuevo producto
+        const nuevoProducto: ProductoConCategoria = {
+          id: `prod-${Date.now()}`,
+          categoriaId: formData.categoriaId,
+          nombre: formData.nombre,
+          variedad: formData.variedad || undefined,
+          descripcion: formData.descripcion || undefined,
+          unidadMedida: formData.unidadMedida,
+          precioBase: parseFloat(formData.precioBase),
+          stockMinimo: parseFloat(formData.stockMinimo),
+          stockActual: parseFloat(formData.stockActual),
+          thc: formData.thc ? parseFloat(formData.thc) : undefined,
+          cbd: formData.cbd ? parseFloat(formData.cbd) : undefined,
+          activo: formData.activo,
+          notas: formData.notas || undefined,
+          categoria: categorias.find((c) => c.id === formData.categoriaId),
+        };
+        setProductos([...productos, nuevoProducto]);
       }
 
       resetForm();
-      loadData();
     } catch (error) {
       console.error("Error guardando producto:", error);
       alert("Error al guardar el producto.");
@@ -302,17 +329,29 @@ export default function ProductosPage() {
     setShowForm(true);
   };
 
-  const handleDelete = async (producto: Producto) => {
-    if (!window.confirm(`¿Desactivar el producto "${producto.nombre}"?`)) return;
+  const handleDelete = async (producto: ProductoConCategoria) => {
+    setProductoToDelete(producto);
+    setShowConfirmDelete(true);
+  };
 
+  const confirmDelete = async () => {
+    if (!productoToDelete) return;
+
+    setDeleting(true);
     try {
-      // En lugar de eliminar, desactivar
-      // TODO: Implementar con Firebase
-      console.log("Desactivar producto:", producto.id);
-      loadData();
+      // Desactivar producto en lugar de eliminar
+      setProductos(
+        productos.map((p) =>
+          p.id === productoToDelete.id ? { ...p, activo: false } : p
+        )
+      );
+      setShowConfirmDelete(false);
+      setProductoToDelete(null);
     } catch (error) {
       console.error("Error desactivando producto:", error);
       alert("Error al desactivar el producto.");
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -1016,6 +1055,22 @@ export default function ProductosPage() {
 
       {/* Modal de Detalles */}
       {renderModalDetalles()}
+
+      {/* Diálogo de Confirmación */}
+      <ConfirmDialog
+        isOpen={showConfirmDelete}
+        onClose={() => {
+          setShowConfirmDelete(false);
+          setProductoToDelete(null);
+        }}
+        onConfirm={confirmDelete}
+        title="Desactivar Producto"
+        message={`¿Estás seguro de desactivar el producto "${productoToDelete?.nombre}"? El producto no se eliminará, solo se marcará como inactivo.`}
+        confirmText="Desactivar"
+        cancelText="Cancelar"
+        variant="warning"
+        loading={deleting}
+      />
     </div>
   );
 }

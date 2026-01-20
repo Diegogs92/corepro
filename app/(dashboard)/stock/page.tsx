@@ -24,6 +24,7 @@ import {
   mockMovimientosStock,
 } from "@/lib/mockData";
 import Modal from "@/components/ui/Modal";
+import ConfirmDialog from "@/components/ui/ConfirmDialog";
 
 export default function StockPage() {
   const [productos, setProductos] = useState<Producto[]>([]);
@@ -37,6 +38,11 @@ export default function StockPage() {
   const [saving, setSaving] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [categoriaFilter, setCategoriaFilter] = useState("");
+
+  // Estado para confirmación de eliminación
+  const [showConfirmDelete, setShowConfirmDelete] = useState(false);
+  const [productoToDelete, setProductoToDelete] = useState<Producto | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const [formData, setFormData] = useState({
     nombre: "",
@@ -178,11 +184,24 @@ export default function StockPage() {
   };
 
   const handleDelete = (producto: Producto) => {
-    const confirmDelete = window.confirm(
-      `¿Eliminar el producto "${producto.nombre}"?`
-    );
-    if (!confirmDelete) return;
-    setProductos(productos.filter((p) => p.id !== producto.id));
+    setProductoToDelete(producto);
+    setShowConfirmDelete(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!productoToDelete) return;
+
+    setDeleting(true);
+    try {
+      setProductos(productos.filter((p) => p.id !== productoToDelete.id));
+      setShowConfirmDelete(false);
+      setProductoToDelete(null);
+    } catch (error) {
+      console.error("Error eliminando producto:", error);
+      alert("Error al eliminar el producto.");
+    } finally {
+      setDeleting(false);
+    }
   };
 
   const verMovimientos = (producto: Producto) => {
@@ -629,6 +648,22 @@ export default function StockPage() {
           </div>
         )}
       </Modal>
+
+      {/* Diálogo de Confirmación */}
+      <ConfirmDialog
+        isOpen={showConfirmDelete}
+        onClose={() => {
+          setShowConfirmDelete(false);
+          setProductoToDelete(null);
+        }}
+        onConfirm={confirmDelete}
+        title="Eliminar Producto"
+        message={`¿Estás seguro de eliminar el producto "${productoToDelete?.nombre}"? Esta acción no se puede deshacer.`}
+        confirmText="Eliminar"
+        cancelText="Cancelar"
+        variant="danger"
+        loading={deleting}
+      />
     </div>
   );
 }

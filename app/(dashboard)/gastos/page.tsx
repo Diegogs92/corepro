@@ -16,6 +16,7 @@ import Badge from "@/components/ui/Badge";
 import Input from "@/components/ui/Input";
 import Select from "@/components/ui/Select";
 import Modal from "@/components/ui/Modal";
+import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import {
   Plus,
   TrendingDown,
@@ -54,6 +55,11 @@ export default function GastosPage() {
   const [showForm, setShowForm] = useState(false);
   const [saving, setSaving] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+
+  // Estado para confirmación de eliminación
+  const [showConfirmDelete, setShowConfirmDelete] = useState(false);
+  const [gastoToDelete, setGastoToDelete] = useState<GastoConCategoria | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   // Filtros
   const [filtroCategoria, setFiltroCategoria] = useState<string>("TODOS");
@@ -213,32 +219,55 @@ export default function GastosPage() {
     setSaving(true);
 
     try {
-      const payload: Partial<Gasto> = {
-        fecha: new Date(formData.fecha),
-        categoriaId: formData.categoriaId,
-        detalle: formData.detalle,
-        proveedor: formData.proveedor || undefined,
-        monto: parseFloat(formData.monto),
-        metodoPago: formData.metodoPago,
-        pagado: formData.pagado,
-        fechaPago: formData.fechaPago ? new Date(formData.fechaPago) : undefined,
-        comprobante: formData.comprobante || undefined,
-        esRecurrente: formData.esRecurrente,
-        frecuencia: formData.frecuencia || undefined,
-        vencimiento: formData.vencimiento ? new Date(formData.vencimiento) : undefined,
-        notas: formData.notas || undefined,
-      };
-
       if (editingId) {
-        // TODO: Implementar actualización con Firebase
-        console.log("Actualizar gasto:", editingId, payload);
+        // Actualizar gasto existente
+        setGastos(
+          gastos.map((g) =>
+            g.id === editingId
+              ? {
+                  ...g,
+                  fecha: new Date(formData.fecha),
+                  categoriaId: formData.categoriaId,
+                  detalle: formData.detalle,
+                  proveedor: formData.proveedor || undefined,
+                  monto: parseFloat(formData.monto),
+                  metodoPago: formData.metodoPago,
+                  pagado: formData.pagado,
+                  fechaPago: formData.fechaPago ? new Date(formData.fechaPago) : undefined,
+                  comprobante: formData.comprobante || undefined,
+                  esRecurrente: formData.esRecurrente,
+                  frecuencia: formData.frecuencia || undefined,
+                  vencimiento: formData.vencimiento ? new Date(formData.vencimiento) : undefined,
+                  notas: formData.notas || undefined,
+                  categoria: categorias.find((c) => c.id === formData.categoriaId),
+                }
+              : g
+          )
+        );
       } else {
-        // TODO: Implementar creación con Firebase
-        console.log("Crear gasto:", payload);
+        // Crear nuevo gasto
+        const nuevoGasto: GastoConCategoria = {
+          id: `gasto-${Date.now()}`,
+          numero: gastos.length + 1,
+          fecha: new Date(formData.fecha),
+          categoriaId: formData.categoriaId,
+          detalle: formData.detalle,
+          proveedor: formData.proveedor || undefined,
+          monto: parseFloat(formData.monto),
+          metodoPago: formData.metodoPago,
+          pagado: formData.pagado,
+          fechaPago: formData.fechaPago ? new Date(formData.fechaPago) : undefined,
+          comprobante: formData.comprobante || undefined,
+          esRecurrente: formData.esRecurrente,
+          frecuencia: formData.frecuencia || undefined,
+          vencimiento: formData.vencimiento ? new Date(formData.vencimiento) : undefined,
+          notas: formData.notas || undefined,
+          categoria: categorias.find((c) => c.id === formData.categoriaId),
+        };
+        setGastos([...gastos, nuevoGasto]);
       }
 
       resetForm();
-      loadData();
     } catch (error) {
       console.error("Error guardando gasto:", error);
       alert("Error al guardar el gasto.");
@@ -267,16 +296,24 @@ export default function GastosPage() {
     setShowForm(true);
   };
 
-  const handleDelete = async (gasto: Gasto) => {
-    if (!window.confirm(`¿Eliminar el gasto "${gasto.detalle}"?`)) return;
+  const handleDelete = async (gasto: GastoConCategoria) => {
+    setGastoToDelete(gasto);
+    setShowConfirmDelete(true);
+  };
 
+  const confirmDelete = async () => {
+    if (!gastoToDelete) return;
+
+    setDeleting(true);
     try {
-      // TODO: Implementar eliminación con Firebase
-      console.log("Eliminar gasto:", gasto.id);
-      loadData();
+      setGastos(gastos.filter((g) => g.id !== gastoToDelete.id));
+      setShowConfirmDelete(false);
+      setGastoToDelete(null);
     } catch (error) {
       console.error("Error eliminando gasto:", error);
       alert("Error al eliminar el gasto.");
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -826,6 +863,22 @@ export default function GastosPage() {
           </div>
         </form>
       </Modal>
+
+      {/* Diálogo de Confirmación */}
+      <ConfirmDialog
+        isOpen={showConfirmDelete}
+        onClose={() => {
+          setShowConfirmDelete(false);
+          setGastoToDelete(null);
+        }}
+        onConfirm={confirmDelete}
+        title="Eliminar Gasto"
+        message={`¿Estás seguro de eliminar el gasto "${gastoToDelete?.detalle}"? Esta acción no se puede deshacer.`}
+        confirmText="Eliminar"
+        cancelText="Cancelar"
+        variant="danger"
+        loading={deleting}
+      />
     </div>
   );
 }
