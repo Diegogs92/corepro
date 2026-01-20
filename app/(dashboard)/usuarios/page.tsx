@@ -16,6 +16,7 @@ import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import Select from "@/components/ui/Select";
 import Modal from "@/components/ui/Modal";
+import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import {
   Plus,
   Users as UsersIcon,
@@ -44,9 +45,12 @@ export default function UsuariosPage() {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [showDetalles, setShowDetalles] = useState(false);
+  const [showConfirmDelete, setShowConfirmDelete] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [usuarioSeleccionado, setUsuarioSeleccionado] = useState<Usuario | null>(null);
+  const [usuarioToDelete, setUsuarioToDelete] = useState<Usuario | null>(null);
 
   // Filtros
   const [searchTerm, setSearchTerm] = useState("");
@@ -208,15 +212,25 @@ export default function UsuariosPage() {
     setShowForm(true);
   };
 
-  const handleDelete = async (usuario: Usuario) => {
-    if (!confirm(`¿Estás seguro de eliminar al usuario ${usuario.nombre}?`)) return;
+  const handleDelete = (usuario: Usuario) => {
+    setUsuarioToDelete(usuario);
+    setShowConfirmDelete(true);
+  };
 
+  const confirmDelete = async () => {
+    if (!usuarioToDelete) return;
+
+    setDeleting(true);
     try {
       // TODO: Implementar eliminación con Firebase
-      console.log("Eliminar usuario:", usuario.id);
+      console.log("Eliminar usuario:", usuarioToDelete.id);
       await loadUsuarios();
+      setShowConfirmDelete(false);
+      setUsuarioToDelete(null);
     } catch (error) {
       console.error("Error al eliminar usuario:", error);
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -685,6 +699,25 @@ export default function UsuariosPage() {
           </div>
         </form>
       </Modal>
+
+      {/* ====================================================================== */}
+      {/* DIALOG - CONFIRMAR ELIMINACIÓN */}
+      {/* ====================================================================== */}
+
+      <ConfirmDialog
+        isOpen={showConfirmDelete}
+        onClose={() => {
+          setShowConfirmDelete(false);
+          setUsuarioToDelete(null);
+        }}
+        onConfirm={confirmDelete}
+        title="Eliminar Usuario"
+        message={`¿Estás seguro de eliminar al usuario ${usuarioToDelete?.nombre} ${usuarioToDelete?.apellido || ""}? Esta acción no se puede deshacer.`}
+        confirmText="Eliminar"
+        cancelText="Cancelar"
+        variant="danger"
+        loading={deleting}
+      />
     </div>
   );
 }
