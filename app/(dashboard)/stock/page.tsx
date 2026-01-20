@@ -336,15 +336,6 @@ export default function StockPage() {
                   ]}
                 />
               </div>
-              <Button
-                onClick={() => {
-                  setEditingId(null);
-                  setShowForm(true);
-                }}
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Nuevo Producto
-              </Button>
             </div>
           </CardContent>
         </Card>
@@ -450,7 +441,7 @@ export default function StockPage() {
       <Modal
         isOpen={showForm}
         onClose={resetForm}
-        title={editingId ? "Editar Producto" : "Nuevo Producto"}
+        title="Editar Stock de Producto"
         size="lg"
       >
         <form onSubmit={handleSubmit}>
