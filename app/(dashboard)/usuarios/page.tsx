@@ -70,6 +70,8 @@ export default function UsuariosPage() {
 
   // Formulario
   const [formData, setFormData] = useState({
+    username: "",
+    password: "",
     nombre: "",
     apellido: "",
     email: "",
@@ -177,9 +179,10 @@ export default function UsuariosPage() {
           u.id === editingId
             ? {
                 ...u,
+                username: formData.username,
                 nombre: formData.nombre,
                 apellido: formData.apellido || undefined,
-                email: formData.email,
+                email: formData.email || undefined,
                 rol: formData.rol,
                 telefono: formData.telefono || undefined,
                 activo: formData.activo,
@@ -192,9 +195,10 @@ export default function UsuariosPage() {
         // Crear nuevo usuario
         const nuevoUsuario: Usuario = {
           id: `usr-${Date.now()}`,
+          username: formData.username,
           nombre: formData.nombre,
           apellido: formData.apellido || undefined,
-          email: formData.email,
+          email: formData.email || undefined,
           rol: formData.rol,
           telefono: formData.telefono || undefined,
           activo: formData.activo,
@@ -215,9 +219,11 @@ export default function UsuariosPage() {
 
   const handleEdit = (usuario: Usuario) => {
     setFormData({
+      username: usuario.username,
+      password: "",
       nombre: usuario.nombre,
       apellido: usuario.apellido || "",
-      email: usuario.email,
+      email: usuario.email || "",
       rol: usuario.rol,
       telefono: usuario.telefono || "",
       activo: usuario.activo,
@@ -257,6 +263,8 @@ export default function UsuariosPage() {
 
   const resetForm = () => {
     setFormData({
+      username: "",
+      password: "",
       nombre: "",
       apellido: "",
       email: "",
@@ -276,7 +284,8 @@ export default function UsuariosPage() {
   const usuariosFiltrados = usuarios.filter((usuario) => {
     const matchSearch = usuario.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
       usuario.apellido?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      usuario.email.toLowerCase().includes(searchTerm.toLowerCase());
+      usuario.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      usuario.email?.toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchRol = filtroRol === "TODOS" || usuario.rol === filtroRol;
     const matchEstado = filtroEstado === "TODOS" ||
@@ -437,7 +446,7 @@ export default function UsuariosPage() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Usuario</TableHead>
-                    <TableHead>Email</TableHead>
+                    <TableHead>Usuario</TableHead>
                     <TableHead>Rol</TableHead>
                     <TableHead>Estado</TableHead>
                     <TableHead>Último Acceso</TableHead>
@@ -452,15 +461,15 @@ export default function UsuariosPage() {
                           <p className="text-slate-900 dark:text-slate-100">
                             {usuario.nombre} {usuario.apellido}
                           </p>
-                          {usuario.telefono && (
-                            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                              {usuario.telefono}
-                            </p>
-                          )}
+                          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                            @{usuario.username}
+                          </p>
                         </div>
                       </TableCell>
                       <TableCell className="text-slate-600 dark:text-slate-400">
-                        {usuario.email}
+                        <code className="text-xs bg-slate-100 dark:bg-slate-700 px-2 py-1 rounded">
+                          {usuario.username}
+                        </code>
                       </TableCell>
                       <TableCell>{getRolBadge(usuario.rol)}</TableCell>
                       <TableCell>{getEstadoBadge(usuario.activo)}</TableCell>
@@ -534,10 +543,20 @@ export default function UsuariosPage() {
               </div>
               <div>
                 <p className="text-sm font-medium text-slate-600 dark:text-slate-400">
+                  Nombre de Usuario
+                </p>
+                <p className="text-slate-900 dark:text-slate-100">
+                  <code className="text-sm bg-slate-100 dark:bg-slate-700 px-2 py-1 rounded">
+                    {usuarioSeleccionado.username}
+                  </code>
+                </p>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-slate-600 dark:text-slate-400">
                   Email
                 </p>
                 <p className="text-slate-900 dark:text-slate-100">
-                  {usuarioSeleccionado.email}
+                  {usuarioSeleccionado.email || "-"}
                 </p>
               </div>
               <div>
@@ -638,14 +657,32 @@ export default function UsuariosPage() {
               placeholder="Ej: Pérez"
             />
 
+            {/* Usuario */}
+            <Input
+              label="Nombre de Usuario"
+              value={formData.username}
+              onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+              placeholder="Ej: juanperez"
+              required
+            />
+
+            {/* Contraseña */}
+            <Input
+              label={editingId ? "Contraseña (dejar vacío para mantener actual)" : "Contraseña"}
+              type="password"
+              value={formData.password}
+              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+              placeholder="••••••••"
+              required={!editingId}
+            />
+
             {/* Email */}
             <Input
-              label="Email"
+              label="Email (opcional)"
               type="email"
               value={formData.email}
               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
               placeholder="usuario@thegreenboys.com"
-              required
             />
 
             {/* Teléfono */}

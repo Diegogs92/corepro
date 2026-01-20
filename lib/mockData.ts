@@ -675,6 +675,7 @@ export const mockMovimientosStock: MovimientoStock[] = [
 export const mockUsuarios: Usuario[] = [
   {
     id: 'usr-001',
+    username: 'admin',
     nombre: 'Admin',
     apellido: 'Sistema',
     email: 'admin@thegreenboys.com',
@@ -686,6 +687,7 @@ export const mockUsuarios: Usuario[] = [
   },
   {
     id: 'usr-002',
+    username: 'diegogarcia',
     nombre: 'Diego',
     apellido: 'García',
     email: 'diego@thegreenboys.com',
@@ -697,6 +699,7 @@ export const mockUsuarios: Usuario[] = [
   },
   {
     id: 'usr-003',
+    username: 'marialopez',
     nombre: 'María',
     apellido: 'López',
     email: 'maria@thegreenboys.com',
@@ -708,6 +711,7 @@ export const mockUsuarios: Usuario[] = [
   },
   {
     id: 'usr-004',
+    username: 'juanperez',
     nombre: 'Juan',
     apellido: 'Pérez',
     email: 'juan@thegreenboys.com',
@@ -718,6 +722,7 @@ export const mockUsuarios: Usuario[] = [
   },
   {
     id: 'usr-005',
+    username: 'anamartinez',
     nombre: 'Ana',
     apellido: 'Martínez',
     email: 'ana@thegreenboys.com',

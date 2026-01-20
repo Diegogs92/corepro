@@ -5,13 +5,14 @@ import { createContext, useContext, useEffect, useState } from "react";
 // MODO DEMO - Usuario mock para pruebas sin Firebase
 interface User {
   uid: string;
+  username: string;
   email: string | null;
 }
 
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  signIn: (email: string, password: string) => Promise<void>;
+  signIn: (username: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
 }
 
@@ -30,17 +31,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // MODO DEMO: Usuario automático sin autenticación
     const mockUser = {
       uid: "demo-user-123",
-      email: "demo@corepro.com",
+      username: "admin",
+      email: "admin@thegreenboys.com",
     };
     setUser(mockUser);
     setLoading(false);
   }, []);
 
-  const signIn = async (email: string, password: string) => {
+  const signIn = async (username: string, password: string) => {
     // MODO DEMO: Simular login exitoso
+    // TODO: Implementar autenticación real con Firebase
+    // Validar username y password contra usuarios en la base de datos
     const mockUser = {
       uid: "demo-user-123",
-      email: email,
+      username: username,
+      email: null,
     };
     setUser(mockUser);
   };

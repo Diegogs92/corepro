@@ -440,9 +440,11 @@ export type RolUsuario =
 
 export interface Usuario {
   id: string;
+  username: string; // Nombre de usuario para login
+  password?: string; // Contraseña (solo para creación, no se almacena en estado)
   nombre: string;
   apellido?: string;
-  email: string;
+  email?: string;
   rol: RolUsuario;
   activo: boolean;
   fechaCreacion: Date;

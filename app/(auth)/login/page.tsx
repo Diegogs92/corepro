@@ -7,7 +7,7 @@ import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 
 export default function LoginPage() {
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -20,13 +20,11 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      await signIn(email, password);
+      await signIn(username, password);
       router.push("/dashboard");
     } catch (err: any) {
       if (err.code === "auth/user-not-found" || err.code === "auth/wrong-password") {
         setError("Usuario o contraseña incorrectos");
-      } else if (err.code === "auth/invalid-email") {
-        setError("El formato del email es inválido");
       } else {
         setError("Error al iniciar sesión. Intente nuevamente.");
       }
@@ -41,20 +39,22 @@ export default function LoginPage() {
         <div className="bg-white dark:bg-slate-800 shadow-lg rounded-lg p-6 sm:p-8">
           {/* Logo */}
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-primary-600">CorePro</h1>
+            <h1 className="text-3xl font-bold text-brand-teal dark:text-brand-sage">
+              The Green Boys
+            </h1>
             <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
-              Sistema de Gestión Administrativa
+              Sistema de Gestión del Club
             </p>
           </div>
 
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-6">
             <Input
-              label="Email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="admin@corepro.com"
+              label="Usuario"
+              type="text"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              placeholder="admin"
               required
               disabled={loading}
             />
