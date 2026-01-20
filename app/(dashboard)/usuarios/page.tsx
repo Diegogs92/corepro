@@ -171,26 +171,41 @@ export default function UsuariosPage() {
     setSaving(true);
 
     try {
-      const payload: Partial<Usuario> = {
-        nombre: formData.nombre,
-        apellido: formData.apellido || undefined,
-        email: formData.email,
-        rol: formData.rol,
-        telefono: formData.telefono || undefined,
-        activo: formData.activo,
-        notas: formData.notas || undefined,
-      };
-
       if (editingId) {
-        // TODO: Implementar actualización con Firebase
-        console.log("Actualizar usuario:", editingId, payload);
+        // Actualizar usuario existente
+        setUsuarios(usuarios.map(u =>
+          u.id === editingId
+            ? {
+                ...u,
+                nombre: formData.nombre,
+                apellido: formData.apellido || undefined,
+                email: formData.email,
+                rol: formData.rol,
+                telefono: formData.telefono || undefined,
+                activo: formData.activo,
+                notas: formData.notas || undefined,
+              }
+            : u
+        ));
+        console.log("Usuario actualizado:", editingId);
       } else {
-        // TODO: Implementar creación con Firebase
-        console.log("Crear usuario:", payload);
+        // Crear nuevo usuario
+        const nuevoUsuario: Usuario = {
+          id: `usr-${Date.now()}`,
+          nombre: formData.nombre,
+          apellido: formData.apellido || undefined,
+          email: formData.email,
+          rol: formData.rol,
+          telefono: formData.telefono || undefined,
+          activo: formData.activo,
+          fechaCreacion: new Date(),
+          notas: formData.notas || undefined,
+        };
+        setUsuarios([...usuarios, nuevoUsuario]);
+        console.log("Usuario creado:", nuevoUsuario);
       }
 
       resetForm();
-      await loadUsuarios();
     } catch (error) {
       console.error("Error al guardar usuario:", error);
     } finally {
@@ -222,9 +237,10 @@ export default function UsuariosPage() {
 
     setDeleting(true);
     try {
-      // TODO: Implementar eliminación con Firebase
-      console.log("Eliminar usuario:", usuarioToDelete.id);
-      await loadUsuarios();
+      // Eliminar usuario del estado
+      setUsuarios(usuarios.filter(u => u.id !== usuarioToDelete.id));
+      console.log("Usuario eliminado:", usuarioToDelete.id);
+
       setShowConfirmDelete(false);
       setUsuarioToDelete(null);
     } catch (error) {

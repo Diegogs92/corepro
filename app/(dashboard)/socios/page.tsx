@@ -16,6 +16,7 @@ import Badge from "@/components/ui/Badge";
 import Input from "@/components/ui/Input";
 import Select from "@/components/ui/Select";
 import Modal from "@/components/ui/Modal";
+import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import {
   Plus,
   Users,
@@ -51,8 +52,11 @@ export default function SociosPage() {
   const [ventas, setVentas] = useState<Venta[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [showDetalles, setShowDetalles] = useState(false);
+  const [showConfirmDelete, setShowConfirmDelete] = useState(false);
   const [socioSeleccionado, setSocioSeleccionado] = useState<SocioConStats | null>(null);
+  const [socioToDelete, setSocioToDelete] = useState<Socio | null>(null);
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
 
   // Filtros
@@ -186,30 +190,47 @@ export default function SociosPage() {
     setSaving(true);
 
     try {
-      const payload: Partial<Socio> = {
-        nombre: formData.nombre,
-        apellido: formData.apellido || undefined,
-        dni: formData.dni || undefined,
-        telefono: formData.telefono || undefined,
-        email: formData.email || undefined,
-        fechaRegistro: new Date(formData.fechaRegistro),
-        tipo: formData.tipo,
-        saldo: 0,
-        limiteCredito: parseFloat(formData.limiteCredito) || 0,
-        activo: formData.activo,
-        notas: formData.notas || undefined,
-      };
-
       if (editingId) {
-        // TODO: Implementar actualización con Firebase
-        console.log("Actualizar socio:", editingId, payload);
+        // Actualizar socio existente
+        setSocios(socios.map(s =>
+          s.id === editingId
+            ? {
+                ...s,
+                nombre: formData.nombre,
+                apellido: formData.apellido || undefined,
+                dni: formData.dni || undefined,
+                telefono: formData.telefono || undefined,
+                email: formData.email || undefined,
+                fechaRegistro: new Date(formData.fechaRegistro),
+                tipo: formData.tipo,
+                limiteCredito: parseFloat(formData.limiteCredito) || 0,
+                activo: formData.activo,
+                notas: formData.notas || undefined,
+              }
+            : s
+        ));
+        console.log("Socio actualizado:", editingId);
       } else {
-        // TODO: Implementar creación con Firebase
-        console.log("Crear socio:", payload);
+        // Crear nuevo socio
+        const nuevoSocio: Socio = {
+          id: `soc-${Date.now()}`,
+          nombre: formData.nombre,
+          apellido: formData.apellido || undefined,
+          dni: formData.dni || undefined,
+          telefono: formData.telefono || undefined,
+          email: formData.email || undefined,
+          fechaRegistro: new Date(formData.fechaRegistro),
+          tipo: formData.tipo,
+          saldo: 0,
+          limiteCredito: parseFloat(formData.limiteCredito) || 0,
+          activo: formData.activo,
+          notas: formData.notas || undefined,
+        };
+        setSocios([...socios, nuevoSocio]);
+        console.log("Socio creado:", nuevoSocio);
       }
 
       resetForm();
-      loadData();
     } catch (error) {
       console.error("Error guardando socio:", error);
       alert("Error al guardar el socio.");
@@ -235,17 +256,31 @@ export default function SociosPage() {
     setShowForm(true);
   };
 
-  const handleDelete = async (socio: Socio) => {
-    if (!window.confirm(`¿Desactivar al socio "${socio.nombre}"?`)) return;
+  const handleDelete = (socio: Socio) => {
+    setSocioToDelete(socio);
+    setShowConfirmDelete(true);
+  };
 
+  const confirmDelete = async () => {
+    if (!socioToDelete) return;
+
+    setDeleting(true);
     try {
-      // En lugar de eliminar, desactivar
-      // TODO: Implementar con Firebase
-      console.log("Desactivar socio:", socio.id);
-      loadData();
+      // Desactivar socio en lugar de eliminar
+      setSocios(socios.map(s =>
+        s.id === socioToDelete.id
+          ? { ...s, activo: false }
+          : s
+      ));
+      console.log("Socio desactivado:", socioToDelete.id);
+
+      setShowConfirmDelete(false);
+      setSocioToDelete(null);
     } catch (error) {
       console.error("Error desactivando socio:", error);
       alert("Error al desactivar el socio.");
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -912,6 +947,22 @@ export default function SociosPage() {
 
       {/* Modal de Detalles */}
       {renderModalDetalles()}
+
+      {/* Dialog de Confirmación */}
+      <ConfirmDialog
+        isOpen={showConfirmDelete}
+        onClose={() => {
+          setShowConfirmDelete(false);
+          setSocioToDelete(null);
+        }}
+        onConfirm={confirmDelete}
+        title="Desactivar Socio"
+        message={`¿Estás seguro de desactivar al socio ${socioToDelete?.nombre} ${socioToDelete?.apellido || ""}? El socio quedará inactivo pero sus datos se conservarán.`}
+        confirmText="Desactivar"
+        cancelText="Cancelar"
+        variant="warning"
+        loading={deleting}
+      />
     </div>
   );
 }
