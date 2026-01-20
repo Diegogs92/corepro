@@ -682,7 +682,7 @@ export default function UsuariosPage() {
               type="email"
               value={formData.email}
               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              placeholder="usuario@thegreenboys.com"
+              placeholder="usuario@thegardenboys.com"
             />
 
             {/* Teléfono */}

@@ -38,7 +38,7 @@ export default function SetupAdminPage() {
         <div className="bg-white dark:bg-slate-800 shadow-lg rounded-lg p-6 sm:p-8">
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold text-brand-teal dark:text-brand-sage">
-              The Green Boys
+              The Garden Boys
             </h1>
             <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
               Inicialización del Sistema

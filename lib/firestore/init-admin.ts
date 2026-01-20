@@ -11,7 +11,7 @@ export async function createAdminUser() {
   try {
     const adminUsername = "admin";
     const adminPassword = "admin123"; // CAMBIAR ESTO en producción
-    const virtualEmail = `${adminUsername}@thegreenboys.local`;
+    const virtualEmail = `${adminUsername}@thegardenboys.local`;
 
     console.log("Creando usuario admin...");
 
@@ -29,7 +29,7 @@ export async function createAdminUser() {
       username: adminUsername,
       nombre: "Admin",
       apellido: "Sistema",
-      email: "admin@thegreenboys.com",
+      email: "admin@thegardenboys.com",
       rol: "ADMIN",
       activo: true,
       fechaCreacion: Timestamp.now(),

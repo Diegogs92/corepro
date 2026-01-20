@@ -49,7 +49,7 @@ export default function LoginPage() {
           {/* Logo */}
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold text-brand-teal dark:text-brand-sage">
-              The Green Boys
+              The Garden Boys
             </h1>
             <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
               Sistema de Gestión del Club

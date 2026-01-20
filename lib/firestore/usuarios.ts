@@ -101,7 +101,7 @@ export const createUsuario = async (
 ): Promise<Usuario> => {
   try {
     // 1. Crear usuario en Firebase Authentication con email virtual
-    const virtualEmail = `${userData.username}@thegreenboys.local`;
+    const virtualEmail = `${userData.username}@thegardenboys.local`;
     const userCredential = await createUserWithEmailAndPassword(
       auth,
       virtualEmail,

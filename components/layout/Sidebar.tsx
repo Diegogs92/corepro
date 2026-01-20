@@ -75,14 +75,14 @@ export default function Sidebar() {
       <div className="flex h-16 items-center justify-center gap-3 border-b border-slate-200 dark:border-slate-700 px-6">
         <Image
           src="/logo.svg"
-          alt="The Green Boys"
+          alt="The Garden Boys"
           width={40}
           height={40}
           className="h-10 w-10"
           priority
         />
         <h1 className="text-xl font-bold text-brand-teal dark:text-brand-sage">
-          The Green Boys
+          The Garden Boys
         </h1>
       </div>
 

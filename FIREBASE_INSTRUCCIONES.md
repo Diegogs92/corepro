@@ -105,7 +105,7 @@ El sistema creará automáticamente estas colecciones:
 
 El sistema usa **emails virtuales** para la autenticación:
 
-- Cuando creas un usuario con username `juan`, Firebase crea `juan@thegreenboys.local`
+- Cuando creas un usuario con username `juan`, Firebase crea `juan@thegardenboys.local`
 - Los usuarios inician sesión con su username, no con el email virtual
 - Firebase Auth maneja la autenticación de forma segura
 

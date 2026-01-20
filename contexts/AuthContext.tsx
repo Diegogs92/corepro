@@ -53,7 +53,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           } else {
             // Si no existe documento en Firestore, usar datos de Firebase Auth
             const virtualEmail = firebaseUser.email || "";
-            const username = virtualEmail.replace("@thegreenboys.local", "");
+            const username = virtualEmail.replace("@thegardenboys.local", "");
             setUser({
               uid: firebaseUser.uid,
               username: username,
@@ -84,7 +84,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signIn = async (username: string, password: string) => {
     try {
       // Convertir username a email virtual para Firebase Auth
-      const virtualEmail = `${username}@thegreenboys.local`;
+      const virtualEmail = `${username}@thegardenboys.local`;
 
       // Intentar autenticar con Firebase
       const userCredential = await signInWithEmailAndPassword(

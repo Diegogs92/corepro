@@ -204,7 +204,7 @@ export default function DashboardPage() {
     <div>
       <Header
         title="Dashboard"
-        subtitle="Resumen ejecutivo del Club Cannábico The Green Boys"
+        subtitle="Resumen ejecutivo del Club Cannábico The Garden Boys"
       />
 
       <div className="p-4 sm:p-6 lg:p-8">
