@@ -74,14 +74,14 @@ http://localhost:3000/setup-admin
 - Click en el botón **"Crear Usuario Admin"**
 - Se creará el usuario con estas credenciales:
   - **Usuario:** admin
-  - **Contraseña:** admin123
+  - **Contraseña:** GardenBoys2024!
 
 ### 4. Iniciar sesión
 
 - Ve a `http://localhost:3000/login`
 - Inicia sesión con:
   - Usuario: `admin`
-  - Contraseña: `admin123`
+  - Contraseña: `GardenBoys2024!`
 
 ### 5. Cambiar contraseña (Recomendado)
 

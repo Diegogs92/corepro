@@ -50,7 +50,7 @@ El script crea automáticamente:
 
 ### 1. Usuario Administrador
 - **Usuario:** admin
-- **Contraseña:** admin123
+- **Contraseña:** GardenBoys2024!
 - **Email:** admin@thegardenboys.local
 - Documento en Firestore con todos los datos
 
@@ -84,7 +84,7 @@ El script crea automáticamente:
 2. Ve a `http://localhost:3000/login`
 3. Inicia sesión con:
    - Usuario: `admin`
-   - Contraseña: `admin123`
+   - Contraseña: `GardenBoys2024!`
 
 ## 🔍 Verificación
 

@@ -37,7 +37,7 @@ async function initializeFirebase() {
     console.log("📝 Paso 1: Creando usuario administrador...");
 
     const adminUsername = "admin";
-    const adminPassword = "admin123";
+    const adminPassword = "GardenBoys2024!";
     const virtualEmail = `${adminUsername}@thegardenboys.local`;
 
     let adminUid: string;

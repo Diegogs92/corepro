@@ -10,7 +10,7 @@ import { auth, db } from "@/lib/firebase";
 export async function createAdminUser() {
   try {
     const adminUsername = "admin";
-    const adminPassword = "admin123"; // CAMBIAR ESTO en producción
+    const adminPassword = "GardenBoys2024!"; // Contraseña segura por defecto
     const virtualEmail = `${adminUsername}@thegardenboys.local`;
 
     console.log("Creando usuario admin...");

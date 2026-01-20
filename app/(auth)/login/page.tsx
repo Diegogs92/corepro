@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import Button from "@/components/ui/Button";
@@ -11,8 +11,15 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const { signIn } = useAuth();
+  const { signIn, user } = useAuth();
   const router = useRouter();
+
+  // Redirigir al dashboard si el usuario ya está autenticado
+  useEffect(() => {
+    if (user) {
+      router.push("/dashboard");
+    }
+  }, [user, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -21,7 +28,8 @@ export default function LoginPage() {
 
     try {
       await signIn(username, password);
-      router.push("/dashboard");
+      // Esperar un momento para que Firebase actualice el estado
+      // El AuthContext redirigirá automáticamente después
     } catch (err: any) {
       console.error("Error en login:", err);
 
@@ -37,7 +45,6 @@ export default function LoginPage() {
       } else {
         setError("Error al iniciar sesión. Intente nuevamente.");
       }
-    } finally {
       setLoading(false);
     }
   };

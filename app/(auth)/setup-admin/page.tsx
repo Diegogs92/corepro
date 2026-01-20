@@ -21,7 +21,7 @@ export default function SetupAdminPage() {
       setSuccess(true);
       setAdminInfo({
         username: "admin",
-        password: "admin123",
+        password: "GardenBoys2024!",
         uid: user?.uid,
       });
     } catch (err: any) {
@@ -56,7 +56,7 @@ export default function SetupAdminPage() {
 
               <div className="space-y-2 text-sm text-slate-600 dark:text-slate-300">
                 <p><strong>Usuario:</strong> admin</p>
-                <p><strong>Contraseña:</strong> admin123</p>
+                <p><strong>Contraseña:</strong> GardenBoys2024!</p>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
                   (Cambiar contraseña después del primer inicio de sesión)
                 </p>

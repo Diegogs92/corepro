@@ -83,7 +83,7 @@ Si la página `/setup-admin` no funciona, puedes crear el usuario manualmente:
 2. Click en **"Add user"**
 3. Ingresa:
    - **Email:** `admin@thegardenboys.local`
-   - **Password:** `admin123`
+   - **Password:** `GardenBoys2024!`
 4. Click en **"Add user"**
 5. **IMPORTANTE:** Copia el **UID** del usuario (algo como `kH8vFx2Pm9...`)
 
@@ -127,7 +127,7 @@ npm run dev
 1. Ve a: `http://localhost:3000/login`
 2. Ingresa:
    - **Usuario:** `admin`
-   - **Contraseña:** `admin123`
+   - **Contraseña:** `GardenBoys2024!`
 3. Click en **"Iniciar Sesión"**
 
 ✅ **Éxito:** Deberías entrar al dashboard
@@ -166,7 +166,7 @@ npm run dev
 **Causa:** Usuario o contraseña incorrectos  
 **Solución:** Verifica que creaste el usuario con:
 - Email: `admin@thegardenboys.local`
-- Password: `admin123`
+- Password: `GardenBoys2024!`
 
 ### Los cambios no persisten después de refrescar
 **Causa:** Firestore no está configurado o las reglas bloquean las escrituras  
