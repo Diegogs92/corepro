@@ -23,8 +23,17 @@ export default function LoginPage() {
       await signIn(username, password);
       router.push("/dashboard");
     } catch (err: any) {
+      console.error("Error en login:", err);
+
+      // Manejar diferentes códigos de error de Firebase
       if (err.code === "auth/user-not-found" || err.code === "auth/wrong-password") {
         setError("Usuario o contraseña incorrectos");
+      } else if (err.code === "auth/invalid-credential") {
+        setError("Usuario o contraseña incorrectos");
+      } else if (err.code === "auth/too-many-requests") {
+        setError("Demasiados intentos fallidos. Intente más tarde.");
+      } else if (err.code === "auth/network-request-failed") {
+        setError("Error de conexión. Verifique su internet.");
       } else {
         setError("Error al iniciar sesión. Intente nuevamente.");
       }

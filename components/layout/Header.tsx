@@ -1,6 +1,8 @@
 "use client";
 
 import { useAuth } from "@/contexts/AuthContext";
+import { LogOut } from "lucide-react";
+import Button from "@/components/ui/Button";
 
 interface HeaderProps {
   title: string;
@@ -8,7 +10,15 @@ interface HeaderProps {
 }
 
 export default function Header({ title, subtitle }: HeaderProps) {
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+    } catch (error) {
+      console.error("Error al cerrar sesión:", error);
+    }
+  };
 
   return (
     <div className="border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
@@ -20,15 +30,19 @@ export default function Header({ title, subtitle }: HeaderProps) {
         <div className="flex items-center gap-3">
           <div className="text-left sm:text-right">
             <p className="text-sm font-medium text-slate-900 dark:text-slate-100">
-              {user?.email}
+              {user?.username}
             </p>
             <p className="text-xs text-slate-500 dark:text-slate-400">Administrador</p>
           </div>
-          <div className="h-10 w-10 rounded-full bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center">
-            <span className="text-sm font-medium text-primary-600 dark:text-primary-400">
-              {user?.email?.charAt(0).toUpperCase()}
-            </span>
-          </div>
+          <Button
+            onClick={handleSignOut}
+            variant="outline"
+            size="sm"
+            className="flex items-center gap-2"
+          >
+            <LogOut className="h-4 w-4" />
+            <span className="hidden sm:inline">Cerrar Sesión</span>
+          </Button>
         </div>
       </div>
     </div>

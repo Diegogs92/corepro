@@ -110,8 +110,8 @@ export default function Sidebar() {
         })}
       </nav>
 
-      {/* Theme Toggle & Sign Out */}
-      <div className="border-t border-slate-200 dark:border-slate-700 p-3 flex flex-col sm:flex-row md:flex-col gap-2 md:gap-1">
+      {/* Theme Toggle */}
+      <div className="border-t border-slate-200 dark:border-slate-700 p-3">
         <button
           onClick={toggleTheme}
           className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-600 dark:text-slate-300 transition-colors hover:bg-slate-50 hover:text-slate-900 dark:hover:bg-slate-700 dark:hover:text-slate-100 whitespace-nowrap"
@@ -122,13 +122,6 @@ export default function Sidebar() {
             <Sun className="h-5 w-5" />
           )}
           {theme === "light" ? "Tema Oscuro" : "Tema Claro"}
-        </button>
-        <button
-          onClick={handleSignOut}
-          className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-600 dark:text-slate-300 transition-colors hover:bg-slate-50 hover:text-slate-900 dark:hover:bg-slate-700 dark:hover:text-slate-100 whitespace-nowrap"
-        >
-          <LogOut className="h-5 w-5" />
-          Cerrar Sesión
         </button>
       </div>
     </div>

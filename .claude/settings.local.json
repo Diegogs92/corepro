@@ -22,7 +22,10 @@
       "Bash(python analyze_excel.py:*)",
       "Bash(python analyze_detailed.py:*)",
       "Bash(python final_analysis.py:*)",
-      "Bash(python:*)"
+      "Bash(python:*)",
+      "Bash(tail:*)",
+      "Bash(git reset:*)",
+      "Bash(npm install:*)"
     ],
     "deny": [],
     "ask": []

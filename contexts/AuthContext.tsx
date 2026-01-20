@@ -1,8 +1,16 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState } from "react";
+import {
+  signInWithEmailAndPassword,
+  signOut as firebaseSignOut,
+  onAuthStateChanged,
+  User as FirebaseUser
+} from "firebase/auth";
+import { doc, getDoc } from "firebase/firestore";
+import { auth, db } from "@/lib/firebase";
+import { useRouter } from "next/navigation";
 
-// MODO DEMO - Usuario mock para pruebas sin Firebase
 interface User {
   uid: string;
   username: string;
@@ -26,33 +34,82 @@ const AuthContext = createContext<AuthContextType>({
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const router = useRouter();
 
   useEffect(() => {
-    // MODO DEMO: Usuario automático sin autenticación
-    const mockUser = {
-      uid: "demo-user-123",
-      username: "admin",
-      email: "admin@thegreenboys.com",
-    };
-    setUser(mockUser);
-    setLoading(false);
+    // Escuchar cambios en el estado de autenticación
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (firebaseUser) {
+        // Usuario autenticado - obtener datos adicionales de Firestore
+        try {
+          const userDoc = await getDoc(doc(db, "usuarios", firebaseUser.uid));
+          if (userDoc.exists()) {
+            const userData = userDoc.data();
+            setUser({
+              uid: firebaseUser.uid,
+              username: userData.username,
+              email: userData.email || null,
+            });
+          } else {
+            // Si no existe documento en Firestore, usar datos de Firebase Auth
+            const virtualEmail = firebaseUser.email || "";
+            const username = virtualEmail.replace("@thegreenboys.local", "");
+            setUser({
+              uid: firebaseUser.uid,
+              username: username,
+              email: firebaseUser.email,
+            });
+          }
+        } catch (error) {
+          console.error("Error obteniendo datos del usuario:", error);
+          // Fallback a datos de Firebase Auth
+          const virtualEmail = firebaseUser.email || "";
+          const username = virtualEmail.replace("@thegreenboys.local", "");
+          setUser({
+            uid: firebaseUser.uid,
+            username: username,
+            email: firebaseUser.email,
+          });
+        }
+      } else {
+        // No hay usuario autenticado
+        setUser(null);
+      }
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
   }, []);
 
   const signIn = async (username: string, password: string) => {
-    // MODO DEMO: Simular login exitoso
-    // TODO: Implementar autenticación real con Firebase
-    // Validar username y password contra usuarios en la base de datos
-    const mockUser = {
-      uid: "demo-user-123",
-      username: username,
-      email: null,
-    };
-    setUser(mockUser);
+    try {
+      // Convertir username a email virtual para Firebase Auth
+      const virtualEmail = `${username}@thegreenboys.local`;
+
+      // Intentar autenticar con Firebase
+      const userCredential = await signInWithEmailAndPassword(
+        auth,
+        virtualEmail,
+        password
+      );
+
+      // Firebase Auth onAuthStateChanged se encargará de actualizar el estado
+      return;
+    } catch (error: any) {
+      console.error("Error en signIn:", error);
+      throw error;
+    }
   };
 
   const signOut = async () => {
-    // MODO DEMO: Simular logout
-    setUser(null);
+    try {
+      await firebaseSignOut(auth);
+      setUser(null);
+      router.push("/login");
+    } catch (error) {
+      console.error("Error al cerrar sesión:", error);
+      throw error;
+    }
   };
 
   return (
