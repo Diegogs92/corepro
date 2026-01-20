@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { DollarSign } from "lucide-react";
+import { useExchangeRate } from "@/hooks/useExchangeRate";
 
 interface PriceInputProps {
   label: string;
@@ -8,7 +9,7 @@ interface PriceInputProps {
   required?: boolean;
   disabled?: boolean;
   className?: string;
-  exchangeRate?: number;
+  exchangeRate?: number; // Opcional: si se provee, sobreescribe el valor de la API
 }
 
 export default function PriceInput({
@@ -18,8 +19,10 @@ export default function PriceInput({
   required = false,
   disabled = false,
   className = "",
-  exchangeRate = 1495, // Tipo de cambio por defecto (Dólar Blue - actualizado 20/01/2026)
+  exchangeRate: customExchangeRate,
 }: PriceInputProps) {
+  const { exchangeRate: apiExchangeRate } = useExchangeRate();
+  const exchangeRate = customExchangeRate || apiExchangeRate;
   const [currency, setCurrency] = useState<"ARS" | "USD">("ARS");
   const [inputValue, setInputValue] = useState(value.toString());
 
