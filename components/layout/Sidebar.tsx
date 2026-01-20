@@ -66,15 +66,18 @@ export default function Sidebar() {
   return (
     <div className="flex w-full md:w-64 flex-col bg-white dark:bg-slate-800 border-b md:border-b-0 md:border-r border-slate-200 dark:border-slate-700 md:h-screen">
       {/* Logo */}
-      <div className="flex h-16 items-center justify-center border-b border-slate-200 dark:border-slate-700 px-6">
+      <div className="flex h-16 items-center justify-center gap-3 border-b border-slate-200 dark:border-slate-700 px-6">
         <Image
           src="/logo.svg"
           alt="The Green Boys"
-          width={150}
+          width={40}
           height={40}
-          className="h-10 w-auto"
+          className="h-10 w-10"
           priority
         />
+        <h1 className="text-xl font-bold text-brand-teal dark:text-brand-sage">
+          The Green Boys
+        </h1>
       </div>
 
       {/* Navigation */}
