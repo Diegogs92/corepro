@@ -427,3 +427,27 @@ export interface DashboardStats {
   saldoNeto: number;
   productosStockCritico: number;
 }
+
+// ----------------------------------------------------------------------------
+// 13. USUARIOS Y ROLES
+// ----------------------------------------------------------------------------
+
+export type RolUsuario =
+  | 'ADMIN'           // Acceso total al sistema
+  | 'GERENTE'         // Gestión de ventas, stock, gastos y reportes
+  | 'VENDEDOR'        // Solo ventas y consulta de stock
+  | 'OPERADOR';       // Ventas, stock y productos
+
+export interface Usuario {
+  id: string;
+  nombre: string;
+  apellido?: string;
+  email: string;
+  rol: RolUsuario;
+  activo: boolean;
+  fechaCreacion: Date;
+  ultimoAcceso?: Date;
+  telefono?: string;
+  avatar?: string;
+  notas?: string;
+}

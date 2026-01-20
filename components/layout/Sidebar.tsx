@@ -10,6 +10,7 @@ import {
   Package,
   CreditCard,
   Users,
+  UserCog,
   LogOut,
   Moon,
   Sun,
@@ -47,6 +48,11 @@ const menuItems = [
     name: "Gastos",
     href: "/gastos",
     icon: CreditCard,
+  },
+  {
+    name: "Usuarios",
+    href: "/usuarios",
+    icon: UserCog,
   },
 ];
 

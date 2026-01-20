@@ -19,6 +19,7 @@ import type {
   MovimientoStock,
   Cosecha,
   MovimientoCaja,
+  Usuario,
 } from './types';
 
 // ============================================================================
@@ -668,6 +669,67 @@ export const mockMovimientosStock: MovimientoStock[] = [
 ];
 
 // ============================================================================
+// USUARIOS
+// ============================================================================
+
+export const mockUsuarios: Usuario[] = [
+  {
+    id: 'usr-001',
+    nombre: 'Admin',
+    apellido: 'Sistema',
+    email: 'admin@thegreenboys.com',
+    rol: 'ADMIN',
+    activo: true,
+    fechaCreacion: new Date('2024-01-01'),
+    ultimoAcceso: new Date(),
+    telefono: '+54 9 11 1234-5678',
+  },
+  {
+    id: 'usr-002',
+    nombre: 'Diego',
+    apellido: 'García',
+    email: 'diego@thegreenboys.com',
+    rol: 'GERENTE',
+    activo: true,
+    fechaCreacion: new Date('2024-01-15'),
+    ultimoAcceso: new Date('2024-01-19'),
+    telefono: '+54 9 11 2345-6789',
+  },
+  {
+    id: 'usr-003',
+    nombre: 'María',
+    apellido: 'López',
+    email: 'maria@thegreenboys.com',
+    rol: 'VENDEDOR',
+    activo: true,
+    fechaCreacion: new Date('2024-02-01'),
+    ultimoAcceso: new Date('2024-01-18'),
+    telefono: '+54 9 11 3456-7890',
+  },
+  {
+    id: 'usr-004',
+    nombre: 'Juan',
+    apellido: 'Pérez',
+    email: 'juan@thegreenboys.com',
+    rol: 'OPERADOR',
+    activo: true,
+    fechaCreacion: new Date('2024-02-10'),
+    ultimoAcceso: new Date('2024-01-17'),
+  },
+  {
+    id: 'usr-005',
+    nombre: 'Ana',
+    apellido: 'Martínez',
+    email: 'ana@thegreenboys.com',
+    rol: 'VENDEDOR',
+    activo: false,
+    fechaCreacion: new Date('2023-12-01'),
+    ultimoAcceso: new Date('2023-12-20'),
+    notas: 'Usuario inactivo - ya no trabaja en el club',
+  },
+];
+
+// ============================================================================
 // EXPORTS
 // ============================================================================
 
@@ -685,6 +747,7 @@ export const mockData = {
   pagosSueldos: mockPagosSueldos,
   cosechas: mockCosechas,
   movimientosStock: mockMovimientosStock,
+  usuarios: mockUsuarios,
 };
 
 // ============================================================================
