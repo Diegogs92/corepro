@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import {
@@ -65,8 +66,15 @@ export default function Sidebar() {
   return (
     <div className="flex w-full md:w-64 flex-col bg-white dark:bg-slate-800 border-b md:border-b-0 md:border-r border-slate-200 dark:border-slate-700 md:h-screen">
       {/* Logo */}
-      <div className="flex h-16 items-center border-b border-slate-200 dark:border-slate-700 px-6">
-        <h1 className="text-2xl font-bold text-primary-600 dark:text-primary-400">CorePro</h1>
+      <div className="flex h-16 items-center justify-center border-b border-slate-200 dark:border-slate-700 px-6">
+        <Image
+          src="/logo.svg"
+          alt="The Green Boys"
+          width={150}
+          height={40}
+          className="h-10 w-auto"
+          priority
+        />
       </div>
 
       {/* Navigation */}

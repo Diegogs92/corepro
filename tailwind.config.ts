@@ -10,23 +10,31 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
+        // The Green Boys Brand Colors
+        brand: {
+          teal: '#08605F',      // Color primario - verde azulado oscuro
+          sage: '#97BD97',      // Color secundario - verde salvia
+          purple: '#1B1725',    // Color oscuro para textos y fondos
+          black: '#000000',     // Negro puro
+          pink: '#FFEAEE',      // Rosa pastel para acentos
+        },
         primary: {
-          50: '#eff6ff',
-          100: '#dbeafe',
-          200: '#bfdbfe',
-          300: '#93c5fd',
-          400: '#60a5fa',
-          500: '#3b82f6',
-          600: '#1e40af',
-          700: '#1e3a8a',
-          800: '#1e3a8a',
-          900: '#1e3a8a',
+          50: '#e6f4f4',
+          100: '#cde9e8',
+          200: '#9bd3d1',
+          300: '#69bdba',
+          400: '#37a7a3',
+          500: '#08605F',      // Brand teal
+          600: '#064d4c',
+          700: '#053a39',
+          800: '#032726',
+          900: '#021413',
         },
         success: {
-          50: '#f0fdf4',
-          100: '#dcfce7',
-          500: '#16a34a',
-          600: '#15803d',
+          50: '#f1f9f1',
+          100: '#e3f3e3',
+          500: '#97BD97',      // Brand sage
+          600: '#7aa87a',
         },
         warning: {
           50: '#fefce8',
@@ -35,8 +43,8 @@ const config: Config = {
           600: '#ca8a04',
         },
         danger: {
-          50: '#fef2f2',
-          100: '#fee2e2',
+          50: '#fff5f6',
+          100: '#FFEAEE',      // Brand pink
           500: '#dc2626',
           600: '#b91c1c',
         },

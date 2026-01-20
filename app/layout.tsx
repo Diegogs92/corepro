@@ -7,8 +7,11 @@ import { ThemeProvider } from "@/contexts/ThemeContext";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "CorePro - Sistema de Gestión Administrativa",
-  description: "Sistema de gestión interna para ONGs - Control de ventas, stock y gastos",
+  title: "The Green Boys - Administración",
+  description: "Sistema de gestión para Club Cannábico The Green Boys - Control de ventas, stock, socios y gastos",
+  icons: {
+    icon: '/favicon.svg',
+  },
 };
 
 export default function RootLayout({
