@@ -8,6 +8,7 @@ import {
   LayoutDashboard,
   ShoppingCart,
   Package,
+  Boxes,
   CreditCard,
   Users,
   UserCog,
@@ -42,7 +43,7 @@ const menuItems = [
   {
     name: "Stock",
     href: "/stock",
-    icon: Package,
+    icon: Boxes,
   },
   {
     name: "Gastos",
