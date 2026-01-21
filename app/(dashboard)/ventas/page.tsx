@@ -21,12 +21,14 @@ import type { Venta, ItemVenta, Socio, Producto, EstadoPagoVenta } from "@/lib/t
 import { startOfMonth, endOfMonth, startOfDay, endOfDay } from "date-fns";
 import Modal from "@/components/ui/Modal";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
+import { orderBy, where } from "firebase/firestore";
 import {
-  mockVentas,
-  mockItemsVenta,
-  mockSocios,
-  mockProductos,
-} from "@/lib/mockData";
+  itemsVentaService,
+  productosService,
+  sociosService,
+  ventasService,
+  ventasServiceExtended,
+} from "@/lib/firebaseService";
 
 interface VentaConItems extends Venta {
   items: ItemVenta[];
@@ -77,20 +79,36 @@ export default function VentasPage() {
     calculateStats();
   }, [ventas]);
 
-  const loadData = () => {
-    // Cargar socios
-    setSocios(mockSocios);
+  const loadData = async () => {
+    try {
+      const [sociosData, productosData, ventasData, itemsData] = await Promise.all([
+        sociosService.getAll([orderBy("nombre")]),
+        productosService.getAll(),
+        ventasService.getAll([orderBy("fecha", "desc")]),
+        itemsVentaService.getAll(),
+      ]);
 
-    // Cargar productos
-    setProductos(mockProductos);
+      const itemsPorVenta = new Map<string, ItemVenta[]>();
+      itemsData.forEach((item) => {
+        const items = itemsPorVenta.get(item.ventaId) || [];
+        items.push(item);
+        itemsPorVenta.set(item.ventaId, items);
+      });
 
-    // Cargar ventas con sus items y socios
-    const ventasConItems: VentaConItems[] = mockVentas.map((venta) => {
-      const items = mockItemsVenta.filter((item) => item.ventaId === venta.id);
-      const socio = mockSocios.find((s) => s.id === venta.socioId);
-      return { ...venta, items, socio };
-    });
-    setVentas(ventasConItems);
+      const sociosMap = new Map(sociosData.map((socio) => [socio.id, socio]));
+      const ventasConItems: VentaConItems[] = ventasData.map((venta) => ({
+        ...venta,
+        items: itemsPorVenta.get(venta.id) || [],
+        socio: sociosMap.get(venta.socioId),
+      }));
+
+      setSocios(sociosData);
+      setProductos(productosData);
+      setVentas(ventasConItems);
+    } catch (error) {
+      console.error("Error cargando ventas:", error);
+      alert("Error cargando ventas. Verifica la configuracion de Firebase.");
+    }
   };
 
   const calculateStats = useCallback(() => {
@@ -171,44 +189,51 @@ export default function VentasPage() {
       const [year, month, day] = formData.fecha.split('-').map(Number);
       const fechaVenta = new Date(year, month - 1, day);
 
-      const nuevaVenta: VentaConItems = {
-        id: editingId || `venta-${Date.now()}`,
-        numero: ventas.length + 1,
+      const ventaPayload: Omit<Venta, "id" | "numero"> = {
         fecha: fechaVenta,
         socioId: formData.socioId,
         subtotal,
         descuento,
         total,
-        estadoPago: "PAGADO", // Por defecto
+        estadoPago: "PAGADO",
         montoPagado: total,
         saldoPendiente: 0,
         metodoPago: formData.metodoPago,
         entregado: true,
         fechaEntrega: fechaVenta,
-        notas: formData.notas,
-        items: items.map((item, i) => ({
-          id: `item-${Date.now()}-${i}`,
-          ventaId: editingId || `venta-${Date.now()}`,
-          productoId: item.productoId,
-          descripcion:
-            productos.find((p) => p.id === item.productoId)?.nombre || "",
-          cantidad: parseFloat(item.cantidad),
-          precioUnitario: parseFloat(item.precioUnitario),
-          subtotal:
-            parseFloat(item.cantidad) * parseFloat(item.precioUnitario),
-          descuento: 0,
-          total: parseFloat(item.cantidad) * parseFloat(item.precioUnitario),
-        })),
-        socio: socios.find((s) => s.id === formData.socioId),
+        notas: formData.notas || undefined,
       };
 
-      // Aquí iría la lógica para guardar en Firebase
-      // Por ahora solo actualizamos el estado local
+      const itemsPayload = items.map((item) => ({
+        productoId: item.productoId,
+        descripcion:
+          productos.find((p) => p.id === item.productoId)?.nombre || "",
+        cantidad: parseFloat(item.cantidad),
+        precioUnitario: parseFloat(item.precioUnitario),
+        subtotal: parseFloat(item.cantidad) * parseFloat(item.precioUnitario),
+        descuento: 0,
+        total: parseFloat(item.cantidad) * parseFloat(item.precioUnitario),
+      }));
+
       if (editingId) {
-        setVentas(ventas.map((v) => (v.id === editingId ? nuevaVenta : v)));
+        await ventasService.update(editingId, ventaPayload);
+
+        const itemsExistentes = await itemsVentaService.query([
+          where("ventaId", "==", editingId),
+        ]);
+        await Promise.all(
+          itemsExistentes.map((item) => itemsVentaService.delete(item.id))
+        );
+        await Promise.all(
+          itemsPayload.map((item) =>
+            itemsVentaService.create({ ...item, ventaId: editingId })
+          )
+        );
       } else {
-        setVentas([nuevaVenta, ...ventas]);
+        await ventasServiceExtended.createVentaCompleta(ventaPayload, itemsPayload);
       }
+
+      await loadData();
 
       // Resetear formulario
       setFormData({
@@ -266,13 +291,27 @@ export default function VentasPage() {
     setShowConfirmDelete(true);
   };
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (!ventaToDelete) return;
+
     setDeleting(true);
-    setVentas(ventas.filter((v) => v.id !== ventaToDelete.id));
-    setShowConfirmDelete(false);
-    setVentaToDelete(null);
-    setDeleting(false);
+    try {
+      const itemsExistentes = await itemsVentaService.query([
+        where("ventaId", "==", ventaToDelete.id),
+      ]);
+      await Promise.all(
+        itemsExistentes.map((item) => itemsVentaService.delete(item.id))
+      );
+      await ventasService.delete(ventaToDelete.id);
+      await loadData();
+      setShowConfirmDelete(false);
+      setVentaToDelete(null);
+    } catch (error) {
+      console.error("Error eliminando venta:", error);
+      alert("Error al eliminar la venta.");
+    } finally {
+      setDeleting(false);
+    }
   };
 
   const verDetalle = (venta: VentaConItems) => {

@@ -34,7 +34,7 @@ import {
 } from "lucide-react";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import type { Socio, Venta, TipoSocio } from "@/lib/types";
-import { mockSocios, mockVentas } from "@/lib/mockData";
+import { sociosService, ventasService } from "@/lib/firebaseService";
 
 // Tipo extendido para incluir estadísticas
 interface SocioConStats extends Socio {
@@ -104,26 +104,37 @@ export default function SociosPage() {
   // CARGA DE DATOS
   // ============================================================================
 
-  const loadData = () => {
-    // TODO: Reemplazar con Firebase
-    const ventasData = mockVentas;
+  const loadData = async () => {
+    try {
+      const [sociosData, ventasData] = await Promise.all([
+        sociosService.getAll(),
+        ventasService.getAll(),
+      ]);
 
-    // Calcular estadísticas por socio
-    const sociosData = mockSocios.map((socio) => {
-      const ventasSocio = ventasData.filter((v) => v.socioId === socio.id);
+      const sociosConStats = sociosData.map((socio) => {
+        const ventasSocio = ventasData.filter((v) => v.socioId === socio.id);
+        const fechas = ventasSocio
+          .map((v) => v.fecha)
+          .filter((fecha): fecha is Date => Boolean(fecha));
+        const ultimaCompra =
+          fechas.length > 0
+            ? new Date(Math.max(...fechas.map((fecha) => fecha.getTime())))
+            : undefined;
 
-      return {
-        ...socio,
-        totalCompras: ventasSocio.reduce((sum, v) => sum + v.total, 0),
-        cantidadCompras: ventasSocio.length,
-        ultimaCompra: ventasSocio.length > 0
-          ? new Date(Math.max(...ventasSocio.map((v) => v.fecha.getTime())))
-          : undefined,
-      };
-    });
+        return {
+          ...socio,
+          totalCompras: ventasSocio.reduce((sum, v) => sum + v.total, 0),
+          cantidadCompras: ventasSocio.length,
+          ultimaCompra,
+        };
+      });
 
-    setSocios(sociosData);
-    setVentas(ventasData);
+      setSocios(sociosConStats);
+      setVentas(ventasData);
+    } catch (error) {
+      console.error("Error cargando socios:", error);
+      alert("Error cargando socios. Verifica la configuracion de Firebase.");
+    }
   };
 
   // ============================================================================
@@ -194,46 +205,29 @@ export default function SociosPage() {
       const [year, month, day] = formData.fechaRegistro.split('-').map(Number);
       const fechaRegistro = new Date(year, month - 1, day);
 
+      const socioPayload = {
+        nombre: formData.nombre,
+        apellido: formData.apellido || undefined,
+        dni: formData.dni || undefined,
+        telefono: formData.telefono || undefined,
+        email: formData.email || undefined,
+        fechaRegistro,
+        tipo: formData.tipo,
+        limiteCredito: parseFloat(formData.limiteCredito) || 0,
+        activo: formData.activo,
+        notas: formData.notas || undefined,
+      };
+
       if (editingId) {
-        // Actualizar socio existente
-        setSocios(socios.map(s =>
-          s.id === editingId
-            ? {
-                ...s,
-                nombre: formData.nombre,
-                apellido: formData.apellido || undefined,
-                dni: formData.dni || undefined,
-                telefono: formData.telefono || undefined,
-                email: formData.email || undefined,
-                fechaRegistro: fechaRegistro,
-                tipo: formData.tipo,
-                limiteCredito: parseFloat(formData.limiteCredito) || 0,
-                activo: formData.activo,
-                notas: formData.notas || undefined,
-              }
-            : s
-        ));
-        console.log("Socio actualizado:", editingId);
+        await sociosService.update(editingId, socioPayload);
       } else {
-        // Crear nuevo socio
-        const nuevoSocio: Socio = {
-          id: `soc-${Date.now()}`,
-          nombre: formData.nombre,
-          apellido: formData.apellido || undefined,
-          dni: formData.dni || undefined,
-          telefono: formData.telefono || undefined,
-          email: formData.email || undefined,
-          fechaRegistro: fechaRegistro,
-          tipo: formData.tipo,
+        await sociosService.create({
+          ...socioPayload,
           saldo: 0,
-          limiteCredito: parseFloat(formData.limiteCredito) || 0,
-          activo: formData.activo,
-          notas: formData.notas || undefined,
-        };
-        setSocios([...socios, nuevoSocio]);
-        console.log("Socio creado:", nuevoSocio);
+        });
       }
 
+      await loadData();
       resetForm();
     } catch (error) {
       console.error("Error guardando socio:", error);
@@ -271,12 +265,8 @@ export default function SociosPage() {
     setDeleting(true);
     try {
       // Desactivar socio en lugar de eliminar
-      setSocios(socios.map(s =>
-        s.id === socioToDelete.id
-          ? { ...s, activo: false }
-          : s
-      ));
-      console.log("Socio desactivado:", socioToDelete.id);
+      await sociosService.update(socioToDelete.id, { activo: false });
+      await loadData();
 
       setShowConfirmDelete(false);
       setSocioToDelete(null);

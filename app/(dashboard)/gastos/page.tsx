@@ -36,10 +36,8 @@ import {
 import { formatCurrency, formatDate } from "@/lib/utils";
 import type { Gasto, CategoriaGasto, FrecuenciaGasto, MetodoPago } from "@/lib/types";
 import { startOfMonth, endOfMonth, isAfter, isBefore } from "date-fns";
-import {
-  mockGastosFijos,
-  mockCategoriasGastos,
-} from "@/lib/mockData";
+import { mockCategoriasGastos } from "@/lib/mockData";
+import { categoriasGastosService, gastosService } from "@/lib/firebaseService";
 
 // Tipo extendido para incluir categoría
 interface GastoConCategoria extends Gasto {
@@ -111,15 +109,28 @@ export default function GastosPage() {
   // CARGA DE DATOS
   // ============================================================================
 
-  const loadData = () => {
-    // TODO: Reemplazar con Firebase
-    const gastosData = mockGastosFijos.map((gasto) => ({
-      ...gasto,
-      categoria: mockCategoriasGastos.find((c) => c.id === gasto.categoriaId),
-    }));
+    const loadData = async () => {
+    try {
+      const [gastosData, categoriasData] = await Promise.all([
+        gastosService.getAll(),
+        categoriasGastosService.getAll(),
+      ]);
 
-    setGastos(gastosData);
-    setCategorias(mockCategoriasGastos);
+      const categoriasFinal =
+        categoriasData.length > 0 ? categoriasData : mockCategoriasGastos;
+      const categoriasMap = new Map(categoriasFinal.map((c) => [c.id, c]));
+
+      const gastosConCategoria = gastosData.map((gasto) => ({
+        ...gasto,
+        categoria: categoriasMap.get(gasto.categoriaId),
+      }));
+
+      setGastos(gastosConCategoria);
+      setCategorias(categoriasFinal);
+    } catch (error) {
+      console.error("Error cargando gastos:", error);
+      alert("Error cargando gastos. Verifica la configuracion de Firebase.");
+    }
   };
 
   // ============================================================================
@@ -216,59 +227,42 @@ export default function GastosPage() {
   // HANDLERS DE FORMULARIO
   // ============================================================================
 
-  const handleSubmit = async (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
 
     try {
+      const gastoPayload = {
+        fecha: new Date(formData.fecha),
+        categoriaId: formData.categoriaId,
+        detalle: formData.detalle,
+        proveedor: formData.proveedor || undefined,
+        monto: parseFloat(formData.monto),
+        montoCurrency: formData.montoCurrency,
+        metodoPago: formData.metodoPago,
+        pagado: formData.pagado,
+        fechaPago: formData.fechaPago ? new Date(formData.fechaPago) : undefined,
+        comprobante: formData.comprobante || undefined,
+        esRecurrente: formData.esRecurrente,
+        frecuencia: formData.frecuencia || undefined,
+        vencimiento: formData.vencimiento ? new Date(formData.vencimiento) : undefined,
+        notas: formData.notas || undefined,
+      };
+
       if (editingId) {
-        // Actualizar gasto existente
-        setGastos(
-          gastos.map((g) =>
-            g.id === editingId
-              ? {
-                  ...g,
-                  fecha: new Date(formData.fecha),
-                  categoriaId: formData.categoriaId,
-                  detalle: formData.detalle,
-                  proveedor: formData.proveedor || undefined,
-                  monto: parseFloat(formData.monto),
-                  metodoPago: formData.metodoPago,
-                  pagado: formData.pagado,
-                  fechaPago: formData.fechaPago ? new Date(formData.fechaPago) : undefined,
-                  comprobante: formData.comprobante || undefined,
-                  esRecurrente: formData.esRecurrente,
-                  frecuencia: formData.frecuencia || undefined,
-                  vencimiento: formData.vencimiento ? new Date(formData.vencimiento) : undefined,
-                  notas: formData.notas || undefined,
-                  categoria: categorias.find((c) => c.id === formData.categoriaId),
-                }
-              : g
-          )
-        );
+        await gastosService.update(editingId, gastoPayload);
       } else {
-        // Crear nuevo gasto
-        const nuevoGasto: GastoConCategoria = {
-          id: `gasto-${Date.now()}`,
-          numero: gastos.length + 1,
-          fecha: new Date(formData.fecha),
-          categoriaId: formData.categoriaId,
-          detalle: formData.detalle,
-          proveedor: formData.proveedor || undefined,
-          monto: parseFloat(formData.monto),
-          metodoPago: formData.metodoPago,
-          pagado: formData.pagado,
-          fechaPago: formData.fechaPago ? new Date(formData.fechaPago) : undefined,
-          comprobante: formData.comprobante || undefined,
-          esRecurrente: formData.esRecurrente,
-          frecuencia: formData.frecuencia || undefined,
-          vencimiento: formData.vencimiento ? new Date(formData.vencimiento) : undefined,
-          notas: formData.notas || undefined,
-          categoria: categorias.find((c) => c.id === formData.categoriaId),
-        };
-        setGastos([...gastos, nuevoGasto]);
+        const siguienteNumero =
+          gastos.length > 0
+            ? Math.max(...gastos.map((g) => g.numero || 0)) + 1
+            : 1;
+        await gastosService.create({
+          ...gastoPayload,
+          numero: siguienteNumero,
+        });
       }
 
+      await loadData();
       resetForm();
     } catch (error) {
       console.error("Error guardando gasto:", error);
@@ -285,7 +279,7 @@ export default function GastosPage() {
       detalle: gasto.detalle,
       proveedor: gasto.proveedor || "",
       monto: gasto.monto.toString(),
-      montoCurrency: "ARS", // Default to ARS for existing expenses
+      montoCurrency: gasto.montoCurrency || "ARS",
       metodoPago: gasto.metodoPago,
       pagado: gasto.pagado,
       fechaPago: gasto.fechaPago ? gasto.fechaPago.toISOString().split("T")[0] : "",
@@ -309,7 +303,8 @@ export default function GastosPage() {
 
     setDeleting(true);
     try {
-      setGastos(gastos.filter((g) => g.id !== gastoToDelete.id));
+      await gastosService.delete(gastoToDelete.id);
+      await loadData();
       setShowConfirmDelete(false);
       setGastoToDelete(null);
     } catch (error) {
