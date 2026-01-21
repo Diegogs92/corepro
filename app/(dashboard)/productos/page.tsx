@@ -42,7 +42,7 @@ import {
   productosService,
 } from "@/lib/firebaseService";
 
-// Tipo extendido para incluir categor+¡a
+// Tipo extendido para incluir categoría
 interface ProductoConCategoria extends Producto {
   categoria?: CategoriaProducto;
 }
@@ -63,7 +63,7 @@ export default function ProductosPage() {
   const [saving, setSaving] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
 
-  // Estado para confirmaci+¦n de eliminaci+¦n
+  // Estado para confirmación de eliminación
   const [showConfirmDelete, setShowConfirmDelete] = useState(false);
   const [productoToDelete, setProductoToDelete] = useState<ProductoConCategoria | null>(null);
   const [deleting, setDeleting] = useState(false);
@@ -137,12 +137,12 @@ export default function ProductosPage() {
       setMovimientosStock(movimientosData);
     } catch (error) {
       console.error("Error cargando productos:", error);
-      alert("Error cargando productos. Verifica la configuraci+¦n de Firebase.");
+      alert("Error cargando productos. Verifica la configuración de Firebase.");
     }
   };
 
   // ============================================================================
-  // C+üLCULO DE ESTAD+ìSTICAS
+  // CÁLCULO DE ESTADÍSTICAS
   // ============================================================================
 
   const calculateStats = () => {
@@ -194,7 +194,7 @@ export default function ProductosPage() {
       return (
         <Badge variant="danger">
           <XCircle className="h-3 w-3 mr-1" />
-          Cr+¡tico
+          Crítico
         </Badge>
       );
     } else if (status === "bajo") {
@@ -235,7 +235,7 @@ export default function ProductosPage() {
   // ============================================================================
 
   const productosFiltrados = productos.filter((producto) => {
-    // Filtro por categor+¡a
+    // Filtro por categoría
     if (filtroCategoria !== "TODOS" && producto.categoriaId !== filtroCategoria) {
       return false;
     }
@@ -250,7 +250,7 @@ export default function ProductosPage() {
     if (filtroStock === "BAJO" && status !== "bajo") return false;
     if (filtroStock === "OK" && status !== "ok") return false;
 
-    // B+¦squeda por texto
+    // Búsqueda por texto
     if (searchTerm) {
       const search = searchTerm.toLowerCase();
       return (
@@ -390,15 +390,15 @@ export default function ProductosPage() {
         size="xl"
       >
         <div className="space-y-6">
-          {/* Informaci+¦n del Producto */}
+          {/* Información del Producto */}
           <div>
             <h3 className="text-lg font-semibold mb-3 text-slate-900 dark:text-slate-100">
-              Informaci+¦n del Producto
+              Información del Producto
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <p className="text-sm font-medium text-slate-600 dark:text-slate-400">
-                  Categor+¡a
+                  Categoría
                 </p>
                 <p className="text-slate-900 dark:text-slate-100">
                   {productoSeleccionado.categoria?.nombre || "-"}
@@ -449,7 +449,7 @@ export default function ProductosPage() {
             </div>
           </div>
 
-          {/* Estad+¡sticas */}
+          {/* Estadísticas */}
           <div>
             <h3 className="text-lg font-semibold mb-3 text-slate-900 dark:text-slate-100">
               Inventario y Precios
@@ -471,7 +471,7 @@ export default function ProductosPage() {
               <Card>
                 <CardContent className="p-4">
                   <p className="text-sm font-medium text-slate-600 dark:text-slate-400">
-                    Stock M+¡nimo
+                    Stock Mínimo
                   </p>
                   <p className="text-2xl font-bold text-amber-600 dark:text-amber-400">
                     {productoSeleccionado.stockMinimo}
@@ -503,10 +503,10 @@ export default function ProductosPage() {
             </div>
           </div>
 
-          {/* +Ültimos Movimientos */}
+          {/* Últimos Movimientos */}
           <div>
             <h3 className="text-lg font-semibold mb-3 text-slate-900 dark:text-slate-100">
-              +Ültimos Movimientos de Stock
+              Últimos Movimientos de Stock
             </h3>
             {movimientos.length === 0 ? (
               <p className="text-center py-8 text-slate-500 dark:text-slate-400">
@@ -569,11 +569,11 @@ export default function ProductosPage() {
 
   return (
     <div>
-      <Header title="Productos" subtitle="Cat+ílogo y gesti+¦n de productos" />
+      <Header title="Productos" subtitle="Catálogo y gestión de productos" />
 
       <div className="p-4 sm:p-6 lg:p-8">
         {/* ====================================================================== */}
-        {/* ESTAD+ìSTICAS */}
+        {/* ESTADÍSTICAS */}
         {/* ====================================================================== */}
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5 mb-8">
@@ -634,13 +634,13 @@ export default function ProductosPage() {
             </CardContent>
           </Card>
 
-          {/* Stock Cr+¡tico */}
+          {/* Stock Crítico */}
           <Card>
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-slate-600 dark:text-slate-400">
-                    Stock Cr+¡tico
+                    Stock Crítico
                   </p>
                   <p className="mt-2 text-3xl font-bold text-danger-600 dark:text-danger-400">
                     {stats.stockCritico}
@@ -681,7 +681,7 @@ export default function ProductosPage() {
           <CardHeader>
             <div className="flex flex-col gap-4">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                <CardTitle>Cat+ílogo de Productos</CardTitle>
+                <CardTitle>Catálogo de Productos</CardTitle>
                 <Button onClick={() => setShowForm(true)} size="sm">
                   <Plus className="h-4 w-4 mr-2" />
                   Nuevo Producto
@@ -700,7 +700,7 @@ export default function ProductosPage() {
                   value={filtroCategoria}
                   onChange={(e) => setFiltroCategoria(e.target.value)}
                   options={[
-                    { value: "TODOS", label: "Todas las categor+¡as" },
+                    { value: "TODOS", label: "Todas las categorías" },
                     ...categorias.map((c) => ({
                       value: c.id,
                       label: c.nombre,
@@ -723,7 +723,7 @@ export default function ProductosPage() {
                   onChange={(e) => setFiltroStock(e.target.value as any)}
                   options={[
                     { value: "TODOS", label: "Todo el stock" },
-                    { value: "CRITICO", label: "Stock cr+¡tico" },
+                    { value: "CRITICO", label: "Stock crítico" },
                     { value: "BAJO", label: "Stock bajo" },
                     { value: "OK", label: "Stock OK" },
                   ]}
@@ -739,7 +739,7 @@ export default function ProductosPage() {
                 <p className="text-lg font-medium">No hay productos registrados</p>
                 <p className="text-sm mt-1">
                   {searchTerm || filtroCategoria !== "TODOS" || filtroEstado !== "TODOS"
-                    ? "Intenta cambiar los filtros de b+¦squeda"
+                    ? "Intenta cambiar los filtros de búsqueda"
                     : "Comienza agregando tu primer producto"}
                 </p>
               </div>
@@ -749,10 +749,10 @@ export default function ProductosPage() {
                   <TableHeader>
                     <TableRow>
                       <TableHead>Producto</TableHead>
-                      <TableHead>Categor+¡a</TableHead>
+                      <TableHead>Categoría</TableHead>
                       <TableHead>Variedad</TableHead>
                       <TableHead className="text-right">Stock</TableHead>
-                      <TableHead className="text-right">M+¡n.</TableHead>
+                      <TableHead className="text-right">Mín.</TableHead>
                       <TableHead>Estado Stock</TableHead>
                       <TableHead className="text-right">Precio Base</TableHead>
                       <TableHead className="text-right">Valor Total</TableHead>
@@ -773,7 +773,7 @@ export default function ProductosPage() {
                         </TableCell>
                         <TableCell>
                           <Badge variant="default">
-                            {producto.categoria?.nombre || "Sin categor+¡a"}
+                            {producto.categoria?.nombre || "Sin categoría"}
                           </Badge>
                         </TableCell>
                         <TableCell className="text-slate-600 dark:text-slate-400">
@@ -840,15 +840,15 @@ export default function ProductosPage() {
       >
         <form onSubmit={handleSubmit}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {/* Categor+¡a */}
+            {/* Categoría */}
             <Select
-              label="Categor+¡a"
+              label="Categoría"
               value={formData.categoriaId}
               onChange={(e) =>
                 setFormData({ ...formData, categoriaId: e.target.value })
               }
               options={[
-                { value: "", label: "Selecciona una categor+¡a" },
+                { value: "", label: "Selecciona una categoría" },
                 ...categorias.map((c) => ({
                   value: c.id,
                   label: c.nombre,
@@ -902,9 +902,9 @@ export default function ProductosPage() {
               required
             />
 
-            {/* Stock M+¡nimo */}
+            {/* Stock Mínimo */}
             <Input
-              label="Stock M+¡nimo"
+              label="Stock Mínimo"
               type="number"
               step="0.01"
               min="0"
@@ -994,7 +994,7 @@ export default function ProductosPage() {
       {/* Modal de Detalles */}
       {renderModalDetalles()}
 
-      {/* Di+ílogo de Confirmaci+¦n */}
+      {/* Diálogo de Confirmación */}
       <ConfirmDialog
         isOpen={showConfirmDelete}
         onClose={() => {
@@ -1003,7 +1003,7 @@ export default function ProductosPage() {
         }}
         onConfirm={confirmDelete}
         title="Desactivar Producto"
-        message={`-+Est+ís seguro de desactivar el producto "${productoToDelete?.nombre}"? El producto no se eliminar+í, solo se marcar+í como inactivo.`}
+        message={`¿Estás seguro de desactivar el producto "${productoToDelete?.nombre}"? El producto no se eliminará, solo se marcará como inactivo.`}
         confirmText="Desactivar"
         cancelText="Cancelar"
         variant="warning"
@@ -1012,6 +1012,7 @@ export default function ProductosPage() {
     </div>
   );
 }
+
 
 
 
