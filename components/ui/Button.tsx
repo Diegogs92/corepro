@@ -11,15 +11,15 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     return (
       <button
         className={cn(
-          "inline-flex items-center justify-center rounded-lg font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
+          "inline-flex items-center justify-center rounded-lg font-medium transition-all duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:-translate-y-0.5 active:translate-y-0 active:shadow-none",
           {
-            "bg-primary-600 text-white hover:bg-primary-700 dark:bg-primary-500 dark:hover:bg-primary-600 focus-visible:ring-primary-600":
+            "bg-primary-600 text-white shadow-sm hover:bg-primary-700 hover:shadow-md dark:bg-primary-500 dark:hover:bg-primary-600 focus-visible:ring-primary-600":
               variant === "primary",
-            "bg-slate-200 text-slate-900 hover:bg-slate-300 dark:bg-slate-600 dark:text-slate-100 dark:hover:bg-slate-500 focus-visible:ring-slate-400":
+            "bg-slate-200 text-slate-900 shadow-sm hover:bg-slate-300 hover:shadow-md dark:bg-slate-600 dark:text-slate-100 dark:hover:bg-slate-500 focus-visible:ring-slate-400":
               variant === "secondary",
-            "bg-danger-500 text-white hover:bg-danger-600 dark:bg-danger-600 dark:hover:bg-danger-700 focus-visible:ring-danger-500":
+            "bg-danger-500 text-white shadow-sm hover:bg-danger-600 hover:shadow-md dark:bg-danger-600 dark:hover:bg-danger-700 focus-visible:ring-danger-500":
               variant === "danger",
-            "hover:bg-slate-100 text-slate-700 dark:hover:bg-slate-700 dark:text-slate-300 focus-visible:ring-slate-400":
+            "text-slate-700 hover:bg-slate-100 hover:shadow-sm dark:hover:bg-slate-700 dark:text-slate-300 focus-visible:ring-slate-400":
               variant === "ghost",
           },
           {

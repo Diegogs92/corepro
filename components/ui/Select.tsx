@@ -20,7 +20,7 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
           className={cn(
             "flex h-10 w-full rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 px-3 py-2 text-sm",
             "text-slate-900 dark:text-slate-100",
-            "focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent",
+            "transition-colors duration-200 hover:border-slate-400 dark:hover:border-slate-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent",
             "disabled:cursor-not-allowed disabled:opacity-50",
             error && "border-danger-500 focus:ring-danger-500",
             className

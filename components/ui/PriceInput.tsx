@@ -79,6 +79,7 @@ export default function PriceInput({
                        bg-white dark:bg-slate-700
                        text-slate-900 dark:text-slate-100
                        placeholder-slate-400 dark:placeholder-slate-500
+                       transition-colors duration-200 hover:border-slate-400 dark:hover:border-slate-500
                        focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent
                        disabled:opacity-50 disabled:cursor-not-allowed"
               placeholder="0.00"
@@ -93,6 +94,7 @@ export default function PriceInput({
             className="px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg
                      bg-white dark:bg-slate-700
                      text-slate-900 dark:text-slate-100
+                     transition-colors duration-200 hover:border-slate-400 dark:hover:border-slate-500
                      focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent
                      disabled:opacity-50 disabled:cursor-not-allowed
                      min-w-[100px]"
