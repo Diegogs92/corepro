@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Header from "@/components/layout/Header";
 import Button from "@/components/ui/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
@@ -69,11 +69,6 @@ export default function StockPage() {
     loadData();
   }, []);
 
-  useEffect(() => {
-    filterProductos();
-    calculateStats();
-  }, [searchTerm, categoriaFilter, productos]);
-
   const loadData = async () => {
     try {
       const [productosData, categoriasData, movimientosData] = await Promise.all([
@@ -93,7 +88,7 @@ export default function StockPage() {
     }
   };
 
-  const filterProductos = () => {
+  const filterProductos = useCallback(() => {
     let filtered = productos;
 
     if (searchTerm) {
@@ -109,9 +104,9 @@ export default function StockPage() {
     }
 
     setFilteredProductos(filtered);
-  };
+  }, [searchTerm, categoriaFilter, productos]);
 
-  const calculateStats = () => {
+  const calculateStats = useCallback(() => {
     const totalProductos = productos.length;
     const stockBajo = productos.filter(
       (p) => getStockStatus(p.stockActual, p.stockMinimo) === "bajo"
@@ -125,7 +120,12 @@ export default function StockPage() {
     );
 
     setStats({ totalProductos, stockBajo, stockCritico, valorTotal });
-  };
+  }, [productos]);
+
+  useEffect(() => {
+    filterProductos();
+    calculateStats();
+  }, [filterProductos, calculateStats]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

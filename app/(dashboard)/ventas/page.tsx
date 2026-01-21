@@ -71,6 +71,27 @@ export default function VentasPage() {
     cantidadVentas: 0,
   });
 
+  const calculateStats = useCallback(() => {
+    const now = new Date();
+    const dayStart = startOfDay(now);
+    const dayEnd = endOfDay(now);
+    const monthStart = startOfMonth(now);
+    const monthEnd = endOfMonth(now);
+
+    const totalDia = ventas
+      .filter((v) => v.fecha >= dayStart && v.fecha <= dayEnd)
+      .reduce((sum, v) => sum + v.total, 0);
+
+    const totalMes = ventas
+      .filter((v) => v.fecha >= monthStart && v.fecha <= monthEnd)
+      .reduce((sum, v) => sum + v.total, 0);
+
+    const totalGeneral = ventas.reduce((sum, v) => sum + v.total, 0);
+    const cantidadVentas = ventas.length;
+
+    setStats({ totalDia, totalMes, totalGeneral, cantidadVentas });
+  }, [ventas]);
+
   useEffect(() => {
     loadData();
   }, []);
@@ -110,27 +131,6 @@ export default function VentasPage() {
       alert("Error cargando ventas. Verifica la configuracion de Firebase.");
     }
   };
-
-  const calculateStats = useCallback(() => {
-    const now = new Date();
-    const dayStart = startOfDay(now);
-    const dayEnd = endOfDay(now);
-    const monthStart = startOfMonth(now);
-    const monthEnd = endOfMonth(now);
-
-    const totalDia = ventas
-      .filter((v) => v.fecha >= dayStart && v.fecha <= dayEnd)
-      .reduce((sum, v) => sum + v.total, 0);
-
-    const totalMes = ventas
-      .filter((v) => v.fecha >= monthStart && v.fecha <= monthEnd)
-      .reduce((sum, v) => sum + v.total, 0);
-
-    const totalGeneral = ventas.reduce((sum, v) => sum + v.total, 0);
-    const cantidadVentas = ventas.length;
-
-    setStats({ totalDia, totalMes, totalGeneral, cantidadVentas });
-  }, [ventas]);
 
   const agregarItem = () => {
     setItems([...items, { productoId: "", cantidad: "1", precioUnitario: "0" }]);

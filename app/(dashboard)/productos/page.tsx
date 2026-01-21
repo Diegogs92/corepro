@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Header from "@/components/layout/Header";
 import Button from "@/components/ui/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
@@ -109,10 +109,6 @@ export default function ProductosPage() {
     loadData();
   }, []);
 
-  useEffect(() => {
-    calculateStats();
-  }, [productos]);
-
   // ============================================================================
   // CARGA DE DATOS
   // ============================================================================
@@ -146,7 +142,7 @@ export default function ProductosPage() {
   // CÁLCULO DE ESTADÍSTICAS
   // ============================================================================
 
-  const calculateStats = () => {
+  const calculateStats = useCallback(() => {
     const totalProductos = productos.length;
     const productosActivos = productos.filter((p) => p.activo).length;
 
@@ -170,7 +166,11 @@ export default function ProductosPage() {
       stockCritico,
       valorTotal,
     });
-  };
+  }, [productos]);
+
+  useEffect(() => {
+    calculateStats();
+  }, [calculateStats]);
 
   // ============================================================================
   // HELPERS

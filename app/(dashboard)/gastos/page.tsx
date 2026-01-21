@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Header from "@/components/layout/Header";
 import Button from "@/components/ui/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
@@ -101,10 +101,6 @@ export default function GastosPage() {
     loadData();
   }, []);
 
-  useEffect(() => {
-    calculateStats();
-  }, [gastos]);
-
   // ============================================================================
   // CARGA DE DATOS
   // ============================================================================
@@ -137,7 +133,7 @@ export default function GastosPage() {
   // CÁLCULO DE ESTADÍSTICAS
   // ============================================================================
 
-  const calculateStats = () => {
+  const calculateStats = useCallback(() => {
     const now = new Date();
     const monthStart = startOfMonth(now);
     const monthEnd = endOfMonth(now);
@@ -190,7 +186,11 @@ export default function GastosPage() {
       pendientes,
       proxVencimientos,
     });
-  };
+  }, [gastos]);
+
+  useEffect(() => {
+    calculateStats();
+  }, [calculateStats]);
 
   // ============================================================================
   // FILTRADO DE GASTOS

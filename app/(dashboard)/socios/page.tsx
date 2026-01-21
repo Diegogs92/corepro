@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Header from "@/components/layout/Header";
 import Button from "@/components/ui/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
@@ -96,10 +96,6 @@ export default function SociosPage() {
     loadData();
   }, []);
 
-  useEffect(() => {
-    calculateStats();
-  }, [socios]);
-
   // ============================================================================
   // CARGA DE DATOS
   // ============================================================================
@@ -141,7 +137,7 @@ export default function SociosPage() {
   // CÁLCULO DE ESTADÍSTICAS
   // ============================================================================
 
-  const calculateStats = () => {
+  const calculateStats = useCallback(() => {
     const totalSocios = socios.length;
     const sociosActivos = socios.filter((s) => s.activo).length;
     const sociosInactivos = socios.filter((s) => !s.activo).length;
@@ -163,7 +159,11 @@ export default function SociosPage() {
       deudaTotal,
       saldoAFavor,
     });
-  };
+  }, [socios]);
+
+  useEffect(() => {
+    calculateStats();
+  }, [calculateStats]);
 
   // ============================================================================
   // FILTRADO DE SOCIOS

@@ -89,10 +89,6 @@ export default function UsuariosPage() {
     loadUsuarios();
   }, []);
 
-  useEffect(() => {
-    calculateStats();
-  }, [usuarios]);
-
   // ============================================================================
   // FUNCIONES
   // ============================================================================
@@ -128,6 +124,10 @@ export default function UsuariosPage() {
       operadores,
     });
   }, [usuarios]);
+
+  useEffect(() => {
+    calculateStats();
+  }, [calculateStats]);
 
   const getRolBadge = (rol: RolUsuario) => {
     switch (rol) {
