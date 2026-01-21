@@ -20,6 +20,7 @@ import { formatCurrency, formatDate } from "@/lib/utils";
 import type { Venta, ItemVenta, Socio, Producto, EstadoPagoVenta } from "@/lib/types";
 import { startOfMonth, endOfMonth, startOfDay, endOfDay } from "date-fns";
 import Modal from "@/components/ui/Modal";
+import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import {
   mockVentas,
   mockItemsVenta,
@@ -38,8 +39,11 @@ export default function VentasPage() {
   const [productos, setProductos] = useState<Producto[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [showDetalle, setShowDetalle] = useState(false);
+  const [showConfirmDelete, setShowConfirmDelete] = useState(false);
   const [ventaSeleccionada, setVentaSeleccionada] = useState<VentaConItems | null>(null);
+  const [ventaToDelete, setVentaToDelete] = useState<VentaConItems | null>(null);
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
 
   // Estado del formulario de venta
@@ -258,11 +262,17 @@ export default function VentasPage() {
   };
 
   const handleDelete = (venta: VentaConItems) => {
-    const confirmDelete = window.confirm(
-      `¿Eliminar la venta #${venta.numero}?`
-    );
-    if (!confirmDelete) return;
-    setVentas(ventas.filter((v) => v.id !== venta.id));
+    setVentaToDelete(venta);
+    setShowConfirmDelete(true);
+  };
+
+  const confirmDelete = () => {
+    if (!ventaToDelete) return;
+    setDeleting(true);
+    setVentas(ventas.filter((v) => v.id !== ventaToDelete.id));
+    setShowConfirmDelete(false);
+    setVentaToDelete(null);
+    setDeleting(false);
   };
 
   const verDetalle = (venta: VentaConItems) => {
@@ -745,6 +755,21 @@ export default function VentasPage() {
           </div>
         )}
       </Modal>
+
+      <ConfirmDialog
+        isOpen={showConfirmDelete}
+        onClose={() => {
+          setShowConfirmDelete(false);
+          setVentaToDelete(null);
+        }}
+        onConfirm={confirmDelete}
+        title="Eliminar Venta"
+        message={`Estas seguro de eliminar la venta #${ventaToDelete?.numero}? Esta accion no se puede deshacer.`}
+        confirmText="Eliminar"
+        cancelText="Cancelar"
+        variant="danger"
+        loading={deleting}
+      />
     </div>
   );
 }
