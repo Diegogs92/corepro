@@ -346,67 +346,67 @@ export default function UsuariosPage() {
         {/* ESTADÍSTICAS */}
         {/* ====================================================================== */}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <Card>
-            <div className="flex items-center justify-between">
-              <div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-8 justify-items-center">
+          <Card className="w-full max-w-[260px]">
+            <div className="flex items-start justify-between p-5">
+              <div className="space-y-1">
                 <p className="text-sm font-medium text-slate-600 dark:text-slate-400">
                   Total Usuarios
                 </p>
-                <p className="text-2xl font-bold text-slate-900 dark:text-slate-100 mt-1">
+                <p className="text-3xl font-semibold text-slate-900 dark:text-slate-100">
                   {stats.totalUsuarios}
                 </p>
               </div>
-              <div className="p-3 bg-primary-50 dark:bg-primary-900/30 rounded-lg">
-                <UsersIcon className="h-6 w-6 text-primary-600 dark:text-primary-400" />
+              <div className="rounded-xl p-2.5 bg-primary-50 dark:bg-primary-900/30">
+                <UsersIcon className="h-5 w-5 text-primary-600 dark:text-primary-400" />
               </div>
             </div>
           </Card>
 
-          <Card>
-            <div className="flex items-center justify-between">
-              <div>
+          <Card className="w-full max-w-[260px]">
+            <div className="flex items-start justify-between p-5">
+              <div className="space-y-1">
                 <p className="text-sm font-medium text-slate-600 dark:text-slate-400">
                   Usuarios Activos
                 </p>
-                <p className="text-2xl font-bold text-green-600 dark:text-green-400 mt-1">
+                <p className="text-3xl font-semibold text-green-600 dark:text-green-400">
                   {stats.usuariosActivos}
                 </p>
               </div>
-              <div className="p-3 bg-green-50 dark:bg-green-900/30 rounded-lg">
-                <UserCheck className="h-6 w-6 text-green-600 dark:text-green-400" />
+              <div className="rounded-xl p-2.5 bg-green-50 dark:bg-green-900/30">
+                <UserCheck className="h-5 w-5 text-green-600 dark:text-green-400" />
               </div>
             </div>
           </Card>
 
-          <Card>
-            <div className="flex items-center justify-between">
-              <div>
+          <Card className="w-full max-w-[260px]">
+            <div className="flex items-start justify-between p-5">
+              <div className="space-y-1">
                 <p className="text-sm font-medium text-slate-600 dark:text-slate-400">
                   Administradores
                 </p>
-                <p className="text-2xl font-bold text-red-600 dark:text-red-400 mt-1">
+                <p className="text-3xl font-semibold text-red-600 dark:text-red-400">
                   {stats.admins}
                 </p>
               </div>
-              <div className="p-3 bg-red-50 dark:bg-red-900/30 rounded-lg">
-                <Shield className="h-6 w-6 text-red-600 dark:text-red-400" />
+              <div className="rounded-xl p-2.5 bg-red-50 dark:bg-red-900/30">
+                <Shield className="h-5 w-5 text-red-600 dark:text-red-400" />
               </div>
             </div>
           </Card>
 
-          <Card>
-            <div className="flex items-center justify-between">
-              <div>
+          <Card className="w-full max-w-[260px]">
+            <div className="flex items-start justify-between p-5">
+              <div className="space-y-1">
                 <p className="text-sm font-medium text-slate-600 dark:text-slate-400">
                   Gerentes
                 </p>
-                <p className="text-2xl font-bold text-yellow-600 dark:text-yellow-400 mt-1">
+                <p className="text-3xl font-semibold text-yellow-600 dark:text-yellow-400">
                   {stats.gerentes}
                 </p>
               </div>
-              <div className="p-3 bg-yellow-50 dark:bg-yellow-900/30 rounded-lg">
-                <Shield className="h-6 w-6 text-yellow-600 dark:text-yellow-400" />
+              <div className="rounded-xl p-2.5 bg-yellow-50 dark:bg-yellow-900/30">
+                <Shield className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
               </div>
             </div>
           </Card>
