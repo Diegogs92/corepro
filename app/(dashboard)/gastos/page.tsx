@@ -636,14 +636,14 @@ export default function GastosPage() {
                               variant="ghost"
                               onClick={() => handleEdit(gasto)}
                             >
-                              <Edit className="h-4 w-4" />
+                              <Edit className="h-4 w-4 text-slate-600 dark:text-slate-300" />
                             </Button>
                             <Button
                               size="sm"
                               variant="ghost"
                               onClick={() => handleDelete(gasto)}
                             >
-                              <Trash2 className="h-4 w-4" />
+                              <Trash2 className="h-4 w-4 text-red-600 dark:text-red-400" />
                             </Button>
                           </div>
                         </TableCell>

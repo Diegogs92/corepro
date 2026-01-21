@@ -778,21 +778,21 @@ export default function SociosPage() {
                               variant="ghost"
                               onClick={() => handleVerDetalles(socio)}
                             >
-                              <Eye className="h-4 w-4" />
+                              <Eye className="h-4 w-4 text-slate-600 dark:text-slate-300" />
                             </Button>
                             <Button
                               size="sm"
                               variant="ghost"
                               onClick={() => handleEdit(socio)}
                             >
-                              <Edit className="h-4 w-4" />
+                              <Edit className="h-4 w-4 text-slate-600 dark:text-slate-300" />
                             </Button>
                             <Button
                               size="sm"
                               variant="ghost"
                               onClick={() => handleDelete(socio)}
                             >
-                              <Trash2 className="h-4 w-4" />
+                              <Trash2 className="h-4 w-4 text-red-600 dark:text-red-400" />
                             </Button>
                           </div>
                         </TableCell>

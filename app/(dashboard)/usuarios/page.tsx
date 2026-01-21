@@ -507,14 +507,14 @@ export default function UsuariosPage() {
                             size="sm"
                             onClick={() => handleVerDetalles(usuario)}
                           >
-                            <Eye className="h-4 w-4" />
+                            <Eye className="h-4 w-4 text-slate-600 dark:text-slate-300" />
                           </Button>
                           <Button
                             variant="ghost"
                             size="sm"
                             onClick={() => handleEdit(usuario)}
                           >
-                            <Edit className="h-4 w-4" />
+                            <Edit className="h-4 w-4 text-slate-600 dark:text-slate-300" />
                           </Button>
                           <Button
                             variant="ghost"
