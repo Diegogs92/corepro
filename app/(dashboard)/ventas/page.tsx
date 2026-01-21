@@ -21,7 +21,7 @@ import type { Venta, ItemVenta, Socio, Producto, EstadoPagoVenta } from "@/lib/t
 import { startOfMonth, endOfMonth, startOfDay, endOfDay } from "date-fns";
 import Modal from "@/components/ui/Modal";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
-import { orderBy, where } from "firebase/firestore";
+import { orderBy } from "firebase/firestore";
 import {
   itemsVentaService,
   productosService,
@@ -216,18 +216,10 @@ export default function VentasPage() {
       }));
 
       if (editingId) {
-        await ventasService.update(editingId, ventaPayload);
-
-        const itemsExistentes = await itemsVentaService.query([
-          where("ventaId", "==", editingId),
-        ]);
-        await Promise.all(
-          itemsExistentes.map((item) => itemsVentaService.delete(item.id))
-        );
-        await Promise.all(
-          itemsPayload.map((item) =>
-            itemsVentaService.create({ ...item, ventaId: editingId })
-          )
+        await ventasServiceExtended.updateVentaCompleta(
+          editingId,
+          ventaPayload,
+          itemsPayload
         );
       } else {
         await ventasServiceExtended.createVentaCompleta(ventaPayload, itemsPayload);
@@ -248,7 +240,8 @@ export default function VentasPage() {
       setEditingId(null);
     } catch (error) {
       console.error("Error guardando venta:", error);
-      alert("Error al guardar la venta.");
+      const message = error instanceof Error ? error.message : "Error al guardar la venta.";
+      alert(message);
     } finally {
       setSaving(false);
     }
@@ -296,13 +289,7 @@ export default function VentasPage() {
 
     setDeleting(true);
     try {
-      const itemsExistentes = await itemsVentaService.query([
-        where("ventaId", "==", ventaToDelete.id),
-      ]);
-      await Promise.all(
-        itemsExistentes.map((item) => itemsVentaService.delete(item.id))
-      );
-      await ventasService.delete(ventaToDelete.id);
+      await ventasServiceExtended.deleteVentaCompleta(ventaToDelete.id);
       await loadData();
       setShowConfirmDelete(false);
       setVentaToDelete(null);

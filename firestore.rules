@@ -66,7 +66,7 @@ service cloud.firestore {
     match /ventas/{ventaId} {
       allow read: if isAuthenticated();
       allow create, update: if isAuthenticated();
-      allow delete: if false; // No eliminar ventas
+      allow delete: if isAuthenticated();
 
       // Validaciones
       allow create: if request.resource.data.total >= 0 &&
@@ -77,7 +77,7 @@ service cloud.firestore {
     match /itemsVenta/{itemId} {
       allow read: if isAuthenticated();
       allow create, update: if isAuthenticated();
-      allow delete: if false;
+      allow delete: if isAuthenticated();
 
       // Validaciones
       allow create: if request.resource.data.cantidad > 0 &&
@@ -135,6 +135,11 @@ service cloud.firestore {
       allow read: if isAuthenticated();
       allow create: if isAuthenticated();
       allow update, delete: if false; // No modificar historial
+    }
+
+    // SECUENCIAS - Contadores internos
+    match /secuencias/{secuenciaId} {
+      allow read, write: if isAuthenticated();
     }
   }
 }

@@ -33,11 +33,12 @@ import {
   TrendingUp,
   Eye,
 } from "lucide-react";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, getStockStatus } from "@/lib/utils";
 import type { Producto, CategoriaProducto, MovimientoStock, UnidadMedida } from "@/lib/types";
 import { mockCategoriasProductos } from "@/lib/mockData";
 import {
   categoriasProductosService,
+  productosServiceExtended,
   movimientosStockService,
   productosService,
 } from "@/lib/firebaseService";
@@ -150,14 +151,11 @@ export default function ProductosPage() {
     const productosActivos = productos.filter((p) => p.activo).length;
 
     const stockBajo = productos.filter(
-      (p) =>
-        p.stockActual > 0 &&
-        p.stockActual <= p.stockMinimo &&
-        p.stockActual > p.stockMinimo * 0.5
+      (p) => getStockStatus(p.stockActual, p.stockMinimo) === "bajo"
     ).length;
 
     const stockCritico = productos.filter(
-      (p) => p.stockActual <= p.stockMinimo * 0.5
+      (p) => getStockStatus(p.stockActual, p.stockMinimo) === "critico"
     ).length;
 
     const valorTotal = productos.reduce(
@@ -177,15 +175,6 @@ export default function ProductosPage() {
   // ============================================================================
   // HELPERS
   // ============================================================================
-
-  const getStockStatus = (
-    actual: number,
-    minimo: number
-  ): "critico" | "bajo" | "ok" => {
-    if (actual <= minimo * 0.5) return "critico";
-    if (actual <= minimo) return "bajo";
-    return "ok";
-  };
 
   const getStockBadge = (producto: Producto) => {
     const status = getStockStatus(producto.stockActual, producto.stockMinimo);
@@ -272,6 +261,8 @@ export default function ProductosPage() {
     setSaving(true);
 
     try {
+      const existing = editingId ? productos.find((p) => p.id === editingId) : null;
+      const stockActual = parseFloat(formData.stockActual);
       const productoPayload = {
         categoriaId: formData.categoriaId,
         nombre: formData.nombre,
@@ -280,7 +271,6 @@ export default function ProductosPage() {
         precioBase: parseFloat(formData.precioBase),
         precioBaseCurrency: formData.precioBaseCurrency,
         stockMinimo: parseFloat(formData.stockMinimo),
-        stockActual: parseFloat(formData.stockActual),
         thc: formData.thc ? parseFloat(formData.thc) : undefined,
         cbd: formData.cbd ? parseFloat(formData.cbd) : undefined,
         activo: formData.activo,
@@ -289,9 +279,30 @@ export default function ProductosPage() {
       if (editingId) {
         // Actualizar producto existente
         await productosService.update(editingId, productoPayload);
+        if (existing && stockActual !== existing.stockActual) {
+          await productosServiceExtended.ajustarStock(
+            editingId,
+            stockActual,
+            "Ajuste manual desde Productos"
+          );
+        }
       } else {
         // Crear nuevo producto
-        await productosService.create(productoPayload);
+        const creado = await productosService.create({
+          ...productoPayload,
+          stockActual,
+        });
+        if (stockActual > 0) {
+          await movimientosStockService.create({
+            productoId: creado.id,
+            fecha: new Date(),
+            tipo: "INGRESO",
+            cantidad: stockActual,
+            stockAnterior: 0,
+            stockNuevo: stockActual,
+            motivo: "Stock inicial",
+          } as Omit<MovimientoStock, "id">);
+        }
       }
 
       await loadData();

@@ -14,9 +14,9 @@ import {
   query,
   where,
   orderBy,
-  limit,
   Timestamp,
   writeBatch,
+  runTransaction,
   DocumentData,
   QueryConstraint,
 } from 'firebase/firestore';
@@ -59,6 +59,7 @@ export const COLLECTIONS = {
   MOVIMIENTOS_STOCK: 'movimientosStock',
   COSECHAS: 'cosechas',
   MOVIMIENTOS_CAJA: 'movimientosCaja',
+  SECUENCIAS: 'secuencias',
 } as const;
 
 // ============================================================================
@@ -222,65 +223,263 @@ export const ventasServiceExtended = {
     venta: Omit<Venta, 'id' | 'numero'>,
     items: Omit<ItemVenta, 'id' | 'ventaId'>[]
   ): Promise<{ venta: Venta; items: ItemVenta[] }> {
-    // Obtener siguiente número de venta
-    const ventas = await ventasService.getAll([orderBy('numero', 'desc'), limit(1)]);
-    const siguienteNumero = ventas.length > 0 ? ventas[0].numero + 1 : 1;
+    return runTransaction(db, async (transaction) => {
+      const counterRef = doc(db, COLLECTIONS.SECUENCIAS, 'ventas');
+      const counterSnap = await transaction.get(counterRef);
+      const lastNumero = counterSnap.exists() ? (counterSnap.data().numero as number) || 0 : 0;
+      const siguienteNumero = lastNumero + 1;
+      transaction.set(counterRef, { numero: siguienteNumero }, { merge: true });
 
-    // Crear venta
-    const nuevaVenta = await ventasService.create({
-      ...venta,
-      numero: siguienteNumero,
-    });
+      const ventaRef = doc(collection(db, COLLECTIONS.VENTAS));
+      const nuevaVenta: Venta = {
+        id: ventaRef.id,
+        ...venta,
+        numero: siguienteNumero,
+      };
+      transaction.set(ventaRef, prepareForFirebase({ ...venta, numero: siguienteNumero }));
 
-    // Crear items
-    const nuevosItems: ItemVenta[] = [];
-    for (const item of items) {
-      const nuevoItem = await itemsVentaService.create({
-        ...item,
-        ventaId: nuevaVenta.id,
-      });
-      nuevosItems.push(nuevoItem);
+      const nuevosItems: ItemVenta[] = [];
+      for (const item of items) {
+        const productoRef = doc(db, COLLECTIONS.PRODUCTOS, item.productoId);
+        const productoSnap = await transaction.get(productoRef);
+        if (!productoSnap.exists()) {
+          throw new Error(`Producto no encontrado: ${item.productoId}`);
+        }
+        const productoData = productoSnap.data() as Producto;
+        const nuevoStock = (productoData.stockActual || 0) - item.cantidad;
+        if (nuevoStock < 0) {
+          throw new Error(`Stock insuficiente para ${productoData.nombre}`);
+        }
 
-      // Actualizar stock del producto
-      const producto = await productosService.getById(item.productoId);
-      if (producto) {
-        const nuevoStock = producto.stockActual - item.cantidad;
-        await productosService.update(item.productoId, {
-          stockActual: nuevoStock,
-        });
+        transaction.update(productoRef, { stockActual: nuevoStock });
 
-        // Crear movimiento de stock
-        await movimientosStockService.create({
-          productoId: item.productoId,
-          fecha: nuevaVenta.fecha,
-          tipo: 'EGRESO',
-          cantidad: -item.cantidad,
-          stockAnterior: producto.stockActual,
-          stockNuevo: nuevoStock,
-          motivo: `Venta #${nuevaVenta.numero}`,
-          referenciaId: nuevaVenta.id,
-          referenciaTabla: 'ventas',
-        } as Omit<MovimientoStock, 'id'>);
+        const itemRef = doc(collection(db, COLLECTIONS.ITEMS_VENTA));
+        const nuevoItem: ItemVenta = {
+          id: itemRef.id,
+          ventaId: ventaRef.id,
+          ...item,
+        };
+        transaction.set(itemRef, prepareForFirebase({ ...item, ventaId: ventaRef.id }));
+        nuevosItems.push(nuevoItem);
+
+        const movimientoRef = doc(collection(db, COLLECTIONS.MOVIMIENTOS_STOCK));
+        transaction.set(
+          movimientoRef,
+          prepareForFirebase({
+            productoId: item.productoId,
+            fecha: venta.fecha,
+            tipo: 'EGRESO',
+            cantidad: -item.cantidad,
+            stockAnterior: productoData.stockActual,
+            stockNuevo: nuevoStock,
+            motivo: `Venta #${siguienteNumero}`,
+            referenciaId: ventaRef.id,
+            referenciaTabla: 'ventas',
+          } as Omit<MovimientoStock, 'id'>)
+        );
       }
-    }
 
-    // Crear movimiento de caja si está pagado
-    if (nuevaVenta.estadoPago === 'PAGADO' && nuevaVenta.montoPagado > 0) {
-      await movimientosCajaService.create({
-        fecha: nuevaVenta.fecha,
-        tipo: 'INGRESO',
-        categoria: 'VENTA',
-        monto: nuevaVenta.montoPagado,
-        metodoPago: nuevaVenta.metodoPago || 'EFECTIVO',
-        concepto: `Venta #${nuevaVenta.numero}`,
-        referenciaId: nuevaVenta.id,
-        referenciaTabla: 'ventas',
-        saldoAnterior: 0, // Calcular en frontend
-        saldoNuevo: 0, // Calcular en frontend
-      } as Omit<MovimientoCaja, 'id'>);
-    }
+      if (venta.estadoPago === 'PAGADO' && venta.montoPagado > 0) {
+        const cajaRef = doc(collection(db, COLLECTIONS.MOVIMIENTOS_CAJA));
+        transaction.set(
+          cajaRef,
+          prepareForFirebase({
+            fecha: venta.fecha,
+            tipo: 'INGRESO',
+            categoria: 'VENTA',
+            monto: venta.montoPagado,
+            metodoPago: venta.metodoPago || 'EFECTIVO',
+            concepto: `Venta #${siguienteNumero}`,
+            referenciaId: ventaRef.id,
+            referenciaTabla: 'ventas',
+            saldoAnterior: 0,
+            saldoNuevo: 0,
+          } as Omit<MovimientoCaja, 'id'>)
+        );
+      }
 
-    return { venta: nuevaVenta, items: nuevosItems };
+      return { venta: nuevaVenta, items: nuevosItems };
+    });
+  },
+
+  /**
+   * Actualizar venta completa (venta + items + movimientos stock)
+   */
+  async updateVentaCompleta(
+    ventaId: string,
+    venta: Omit<Venta, 'id' | 'numero'>,
+    items: Omit<ItemVenta, 'id' | 'ventaId'>[]
+  ): Promise<{ venta: Venta; items: ItemVenta[] }> {
+    return runTransaction(db, async (transaction) => {
+      const ventaRef = doc(db, COLLECTIONS.VENTAS, ventaId);
+      const ventaSnap = await transaction.get(ventaRef);
+      if (!ventaSnap.exists()) {
+        throw new Error('Venta no encontrada');
+      }
+      const ventaData = ventaSnap.data() as Venta;
+      const numeroVenta = ventaData.numero;
+
+      const itemsQuery = query(
+        collection(db, COLLECTIONS.ITEMS_VENTA),
+        where('ventaId', '==', ventaId)
+      );
+      const itemsSnap = await transaction.get(itemsQuery);
+      const itemsExistentes = itemsSnap.docs.map((docSnap) => ({
+        id: docSnap.id,
+        ...(docSnap.data() as Omit<ItemVenta, 'id'>),
+      }));
+
+      const oldByProducto = new Map<string, number>();
+      for (const item of itemsExistentes) {
+        oldByProducto.set(
+          item.productoId,
+          (oldByProducto.get(item.productoId) || 0) + item.cantidad
+        );
+      }
+
+      const newByProducto = new Map<string, number>();
+      for (const item of items) {
+        newByProducto.set(
+          item.productoId,
+          (newByProducto.get(item.productoId) || 0) + item.cantidad
+        );
+      }
+
+      const productosIds = new Set([
+        ...Array.from(oldByProducto.keys()),
+        ...Array.from(newByProducto.keys()),
+      ]);
+
+      for (const productoId of productosIds) {
+        const productoRef = doc(db, COLLECTIONS.PRODUCTOS, productoId);
+        const productoSnap = await transaction.get(productoRef);
+        if (!productoSnap.exists()) {
+          throw new Error(`Producto no encontrado: ${productoId}`);
+        }
+        const productoData = productoSnap.data() as Producto;
+        const oldQty = oldByProducto.get(productoId) || 0;
+        const newQty = newByProducto.get(productoId) || 0;
+        const stockChange = oldQty - newQty;
+        const nuevoStock = (productoData.stockActual || 0) + stockChange;
+        if (nuevoStock < 0) {
+          throw new Error(`Stock insuficiente para ${productoData.nombre}`);
+        }
+
+        if (stockChange !== 0) {
+          transaction.update(productoRef, { stockActual: nuevoStock });
+          const movimientoRef = doc(collection(db, COLLECTIONS.MOVIMIENTOS_STOCK));
+          transaction.set(
+            movimientoRef,
+            prepareForFirebase({
+              productoId,
+              fecha: venta.fecha,
+              tipo: 'AJUSTE',
+              cantidad: stockChange,
+              stockAnterior: productoData.stockActual,
+              stockNuevo: nuevoStock,
+              motivo: `Edicion venta #${numeroVenta}`,
+              referenciaId: ventaId,
+              referenciaTabla: 'ventas',
+            } as Omit<MovimientoStock, 'id'>)
+          );
+        }
+      }
+
+      for (const item of itemsExistentes) {
+        const itemRef = doc(db, COLLECTIONS.ITEMS_VENTA, item.id);
+        transaction.delete(itemRef);
+      }
+
+      const nuevosItems: ItemVenta[] = [];
+      for (const item of items) {
+        const itemRef = doc(collection(db, COLLECTIONS.ITEMS_VENTA));
+        const nuevoItem: ItemVenta = { id: itemRef.id, ventaId, ...item };
+        transaction.set(itemRef, prepareForFirebase({ ...item, ventaId }));
+        nuevosItems.push(nuevoItem);
+      }
+
+      transaction.update(ventaRef, prepareForFirebase({ ...venta, numero: numeroVenta }));
+
+      return {
+        venta: { id: ventaId, numero: numeroVenta, ...venta },
+        items: nuevosItems,
+      };
+    });
+  },
+
+  /**
+   * Eliminar venta completa (venta + items + movimientos stock)
+   */
+  async deleteVentaCompleta(ventaId: string): Promise<void> {
+    return runTransaction(db, async (transaction) => {
+      const ventaRef = doc(db, COLLECTIONS.VENTAS, ventaId);
+      const ventaSnap = await transaction.get(ventaRef);
+      if (!ventaSnap.exists()) {
+        return;
+      }
+      const ventaData = ventaSnap.data() as Venta;
+
+      const itemsQuery = query(
+        collection(db, COLLECTIONS.ITEMS_VENTA),
+        where('ventaId', '==', ventaId)
+      );
+      const itemsSnap = await transaction.get(itemsQuery);
+      const itemsExistentes = itemsSnap.docs.map((docSnap) => ({
+        id: docSnap.id,
+        ...(docSnap.data() as Omit<ItemVenta, 'id'>),
+      }));
+
+      for (const item of itemsExistentes) {
+        const productoRef = doc(db, COLLECTIONS.PRODUCTOS, item.productoId);
+        const productoSnap = await transaction.get(productoRef);
+        if (!productoSnap.exists()) {
+          throw new Error(`Producto no encontrado: ${item.productoId}`);
+        }
+        const productoData = productoSnap.data() as Producto;
+        const nuevoStock = (productoData.stockActual || 0) + item.cantidad;
+        transaction.update(productoRef, { stockActual: nuevoStock });
+
+        const movimientoRef = doc(collection(db, COLLECTIONS.MOVIMIENTOS_STOCK));
+        transaction.set(
+          movimientoRef,
+          prepareForFirebase({
+            productoId: item.productoId,
+            fecha: ventaData.fecha,
+            tipo: 'INGRESO',
+            cantidad: item.cantidad,
+            stockAnterior: productoData.stockActual,
+            stockNuevo: nuevoStock,
+            motivo: `Anulacion venta #${ventaData.numero}`,
+            referenciaId: ventaId,
+            referenciaTabla: 'ventas',
+          } as Omit<MovimientoStock, 'id'>)
+        );
+
+        const itemRef = doc(db, COLLECTIONS.ITEMS_VENTA, item.id);
+        transaction.delete(itemRef);
+      }
+
+      if (ventaData.estadoPago === 'PAGADO' && ventaData.montoPagado > 0) {
+        const cajaRef = doc(collection(db, COLLECTIONS.MOVIMIENTOS_CAJA));
+        transaction.set(
+          cajaRef,
+          prepareForFirebase({
+            fecha: new Date(),
+            tipo: 'EGRESO',
+            categoria: 'VENTA',
+            monto: ventaData.montoPagado,
+            metodoPago: ventaData.metodoPago || 'EFECTIVO',
+            concepto: `Anulacion venta #${ventaData.numero}`,
+            referenciaId: ventaId,
+            referenciaTabla: 'ventas',
+            saldoAnterior: 0,
+            saldoNuevo: 0,
+          } as Omit<MovimientoCaja, 'id'>)
+        );
+      }
+
+      transaction.delete(ventaRef);
+    });
   },
 
   /**

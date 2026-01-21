@@ -32,8 +32,7 @@ export function formatDateTime(date: Date): string {
 }
 
 export function getStockStatus(cantidadActual: number, stockMinimo: number): 'critico' | 'bajo' | 'ok' {
-  if (cantidadActual === 0) return 'critico';
+  if (cantidadActual <= stockMinimo * 0.5) return 'critico';
   if (cantidadActual <= stockMinimo) return 'bajo';
-  if (cantidadActual <= stockMinimo * 1.5) return 'bajo';
   return 'ok';
 }

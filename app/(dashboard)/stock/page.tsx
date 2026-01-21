@@ -25,6 +25,7 @@ import {
   categoriasProductosService,
   movimientosStockService,
   productosService,
+  productosServiceExtended,
 } from "@/lib/firebaseService";
 
 export default function StockPage() {
@@ -132,12 +133,12 @@ export default function StockPage() {
 
     try {
       const existing = editingId ? productos.find((p) => p.id === editingId) : null;
+      const stockActual = parseFloat(formData.stockActual);
       const productoPayload = {
         categoriaId: formData.categoriaId,
         nombre: formData.nombre,
         variedad: formData.variedad || undefined,
         unidadMedida: formData.unidadMedida,
-        stockActual: parseFloat(formData.stockActual),
         stockMinimo: parseFloat(formData.stockMinimo),
         precioBase: parseFloat(formData.precioBase),
         precioBaseCurrency: existing?.precioBaseCurrency || "ARS",
@@ -148,8 +149,29 @@ export default function StockPage() {
 
       if (editingId) {
         await productosService.update(editingId, productoPayload);
+        if (existing && stockActual !== existing.stockActual) {
+          await productosServiceExtended.ajustarStock(
+            editingId,
+            stockActual,
+            "Ajuste manual desde Stock"
+          );
+        }
       } else {
-        await productosService.create(productoPayload);
+        const creado = await productosService.create({
+          ...productoPayload,
+          stockActual,
+        });
+        if (stockActual > 0) {
+          await movimientosStockService.create({
+            productoId: creado.id,
+            fecha: new Date(),
+            tipo: "INGRESO",
+            cantidad: stockActual,
+            stockAnterior: 0,
+            stockNuevo: stockActual,
+            motivo: "Stock inicial",
+          } as Omit<MovimientoStock, "id">);
+        }
       }
 
       await loadData();
