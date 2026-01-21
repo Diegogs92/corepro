@@ -310,6 +310,13 @@ export const ventasServiceExtended = {
     venta: Omit<Venta, 'id' | 'numero'>,
     items: Omit<ItemVenta, 'id' | 'ventaId'>[]
   ): Promise<{ venta: Venta; items: ItemVenta[] }> {
+    const itemsQuery = query(
+      collection(db, COLLECTIONS.ITEMS_VENTA),
+      where('ventaId', '==', ventaId)
+    );
+    const itemsSnap = await getDocs(itemsQuery);
+    const itemsRefs = itemsSnap.docs.map((docSnap) => docSnap.ref);
+
     return runTransaction(db, async (transaction) => {
       const ventaRef = doc(db, COLLECTIONS.VENTAS, ventaId);
       const ventaSnap = await transaction.get(ventaRef);
@@ -319,15 +326,16 @@ export const ventasServiceExtended = {
       const ventaData = ventaSnap.data() as Venta;
       const numeroVenta = ventaData.numero;
 
-      const itemsQuery = query(
-        collection(db, COLLECTIONS.ITEMS_VENTA),
-        where('ventaId', '==', ventaId)
-      );
-      const itemsSnap = await transaction.get(itemsQuery);
-      const itemsExistentes = itemsSnap.docs.map((docSnap) => ({
-        id: docSnap.id,
-        ...(docSnap.data() as Omit<ItemVenta, 'id'>),
-      }));
+      const itemsExistentes: ItemVenta[] = [];
+      for (const itemRef of itemsRefs) {
+        const itemSnap = await transaction.get(itemRef);
+        if (itemSnap.exists()) {
+          itemsExistentes.push({
+            id: itemSnap.id,
+            ...(itemSnap.data() as Omit<ItemVenta, 'id'>),
+          });
+        }
+      }
 
       const oldByProducto = new Map<string, number>();
       for (const item of itemsExistentes) {
@@ -411,6 +419,13 @@ export const ventasServiceExtended = {
    * Eliminar venta completa (venta + items + movimientos stock)
    */
   async deleteVentaCompleta(ventaId: string): Promise<void> {
+    const itemsQuery = query(
+      collection(db, COLLECTIONS.ITEMS_VENTA),
+      where('ventaId', '==', ventaId)
+    );
+    const itemsSnap = await getDocs(itemsQuery);
+    const itemsRefs = itemsSnap.docs.map((docSnap) => docSnap.ref);
+
     return runTransaction(db, async (transaction) => {
       const ventaRef = doc(db, COLLECTIONS.VENTAS, ventaId);
       const ventaSnap = await transaction.get(ventaRef);
@@ -419,15 +434,16 @@ export const ventasServiceExtended = {
       }
       const ventaData = ventaSnap.data() as Venta;
 
-      const itemsQuery = query(
-        collection(db, COLLECTIONS.ITEMS_VENTA),
-        where('ventaId', '==', ventaId)
-      );
-      const itemsSnap = await transaction.get(itemsQuery);
-      const itemsExistentes = itemsSnap.docs.map((docSnap) => ({
-        id: docSnap.id,
-        ...(docSnap.data() as Omit<ItemVenta, 'id'>),
-      }));
+      const itemsExistentes: ItemVenta[] = [];
+      for (const itemRef of itemsRefs) {
+        const itemSnap = await transaction.get(itemRef);
+        if (itemSnap.exists()) {
+          itemsExistentes.push({
+            id: itemSnap.id,
+            ...(itemSnap.data() as Omit<ItemVenta, 'id'>),
+          });
+        }
+      }
 
       for (const item of itemsExistentes) {
         const productoRef = doc(db, COLLECTIONS.PRODUCTOS, item.productoId);

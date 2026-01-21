@@ -77,7 +77,7 @@ export default function VentasPage() {
 
   useEffect(() => {
     calculateStats();
-  }, [ventas]);
+  }, [calculateStats]);
 
   const loadData = async () => {
     try {
