@@ -36,10 +36,10 @@ import {
 import { formatCurrency } from "@/lib/utils";
 import type { Producto, CategoriaProducto, UnidadMedida } from "@/lib/types";
 import {
-  mockProductos,
   mockCategoriasProductos,
   mockMovimientosStock,
 } from "@/lib/mockData";
+import { categoriasProductosService, productosService } from "@/lib/firebaseService";
 
 // Tipo extendido para incluir categoría
 interface ProductoConCategoria extends Producto {
@@ -116,15 +116,27 @@ export default function ProductosPage() {
   // CARGA DE DATOS
   // ============================================================================
 
-  const loadData = () => {
-    // TODO: Reemplazar con Firebase
-    const productosData = mockProductos.map((producto) => ({
-      ...producto,
-      categoria: mockCategoriasProductos.find((c) => c.id === producto.categoriaId),
-    }));
+  const loadData = async () => {
+    try {
+      const [productosData, categoriasData] = await Promise.all([
+        productosService.getAll(),
+        categoriasProductosService.getAll(),
+      ]);
+      const categoriasFinal =
+        categoriasData.length > 0 ? categoriasData : mockCategoriasProductos;
+      const categoriasMap = new Map(categoriasFinal.map((c) => [c.id, c]));
 
-    setProductos(productosData);
-    setCategorias(mockCategoriasProductos);
+      const productosConCategoria = productosData.map((producto) => ({
+        ...producto,
+        categoria: categoriasMap.get(producto.categoriaId),
+      }));
+
+      setProductos(productosConCategoria);
+      setCategorias(categoriasFinal);
+    } catch (error) {
+      console.error("Error cargando productos:", error);
+      alert("Error cargando productos. Verifica la configuración de Firebase.");
+    }
   };
 
   // ============================================================================
@@ -258,51 +270,31 @@ export default function ProductosPage() {
     setSaving(true);
 
     try {
+      const productoPayload = {
+        categoriaId: formData.categoriaId,
+        nombre: formData.nombre,
+        variedad: formData.variedad || undefined,
+        descripcion: formData.descripcion || undefined,
+        unidadMedida: formData.unidadMedida,
+        precioBase: parseFloat(formData.precioBase),
+        precioBaseCurrency: formData.precioBaseCurrency,
+        stockMinimo: parseFloat(formData.stockMinimo),
+        stockActual: parseFloat(formData.stockActual),
+        thc: formData.thc ? parseFloat(formData.thc) : undefined,
+        cbd: formData.cbd ? parseFloat(formData.cbd) : undefined,
+        activo: formData.activo,
+        notas: formData.notas || undefined,
+      } as Omit<Producto, "id">;
+
       if (editingId) {
         // Actualizar producto existente
-        setProductos(
-          productos.map((p) =>
-            p.id === editingId
-              ? {
-                  ...p,
-                  categoriaId: formData.categoriaId,
-                  nombre: formData.nombre,
-                  variedad: formData.variedad || undefined,
-                  descripcion: formData.descripcion || undefined,
-                  unidadMedida: formData.unidadMedida,
-                  precioBase: parseFloat(formData.precioBase),
-                  stockMinimo: parseFloat(formData.stockMinimo),
-                  stockActual: parseFloat(formData.stockActual),
-                  thc: formData.thc ? parseFloat(formData.thc) : undefined,
-                  cbd: formData.cbd ? parseFloat(formData.cbd) : undefined,
-                  activo: formData.activo,
-                  notas: formData.notas || undefined,
-                  categoria: categorias.find((c) => c.id === formData.categoriaId),
-                }
-              : p
-          )
-        );
+        await productosService.update(editingId, productoPayload);
       } else {
         // Crear nuevo producto
-        const nuevoProducto: ProductoConCategoria = {
-          id: `prod-${Date.now()}`,
-          categoriaId: formData.categoriaId,
-          nombre: formData.nombre,
-          variedad: formData.variedad || undefined,
-          descripcion: formData.descripcion || undefined,
-          unidadMedida: formData.unidadMedida,
-          precioBase: parseFloat(formData.precioBase),
-          stockMinimo: parseFloat(formData.stockMinimo),
-          stockActual: parseFloat(formData.stockActual),
-          thc: formData.thc ? parseFloat(formData.thc) : undefined,
-          cbd: formData.cbd ? parseFloat(formData.cbd) : undefined,
-          activo: formData.activo,
-          notas: formData.notas || undefined,
-          categoria: categorias.find((c) => c.id === formData.categoriaId),
-        };
-        setProductos([...productos, nuevoProducto]);
+        await productosService.create(productoPayload);
       }
 
+      await loadData();
       resetForm();
     } catch (error) {
       console.error("Error guardando producto:", error);
@@ -320,7 +312,7 @@ export default function ProductosPage() {
       descripcion: producto.descripcion || "",
       unidadMedida: producto.unidadMedida,
       precioBase: producto.precioBase.toString(),
-      precioBaseCurrency: "ARS", // Default to ARS for existing products
+      precioBaseCurrency: producto.precioBaseCurrency || "ARS",
       stockMinimo: producto.stockMinimo.toString(),
       stockActual: producto.stockActual.toString(),
       thc: producto.thc?.toString() || "",
@@ -343,11 +335,8 @@ export default function ProductosPage() {
     setDeleting(true);
     try {
       // Desactivar producto en lugar de eliminar
-      setProductos(
-        productos.map((p) =>
-          p.id === productoToDelete.id ? { ...p, activo: false } : p
-        )
-      );
+      await productosService.update(productoToDelete.id, { activo: false });
+      await loadData();
       setShowConfirmDelete(false);
       setProductoToDelete(null);
     } catch (error) {
