@@ -163,10 +163,14 @@ export default function VentasPage() {
     try {
       const { subtotal, descuento, total } = calcularTotales();
 
+      // Convertir la fecha del formulario a Date sin problemas de zona horaria
+      const [year, month, day] = formData.fecha.split('-').map(Number);
+      const fechaVenta = new Date(year, month - 1, day);
+
       const nuevaVenta: VentaConItems = {
         id: editingId || `venta-${Date.now()}`,
         numero: ventas.length + 1,
-        fecha: new Date(formData.fecha),
+        fecha: fechaVenta,
         socioId: formData.socioId,
         subtotal,
         descuento,
@@ -176,7 +180,7 @@ export default function VentasPage() {
         saldoPendiente: 0,
         metodoPago: formData.metodoPago,
         entregado: true,
-        fechaEntrega: new Date(formData.fecha),
+        fechaEntrega: fechaVenta,
         notas: formData.notas,
         items: items.map((item, i) => ({
           id: `item-${Date.now()}-${i}`,
