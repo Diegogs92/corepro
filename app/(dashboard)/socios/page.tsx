@@ -190,6 +190,10 @@ export default function SociosPage() {
     setSaving(true);
 
     try {
+      // Convertir la fecha del formulario a Date sin problemas de zona horaria
+      const [year, month, day] = formData.fechaRegistro.split('-').map(Number);
+      const fechaRegistro = new Date(year, month - 1, day);
+
       if (editingId) {
         // Actualizar socio existente
         setSocios(socios.map(s =>
@@ -201,7 +205,7 @@ export default function SociosPage() {
                 dni: formData.dni || undefined,
                 telefono: formData.telefono || undefined,
                 email: formData.email || undefined,
-                fechaRegistro: new Date(formData.fechaRegistro),
+                fechaRegistro: fechaRegistro,
                 tipo: formData.tipo,
                 limiteCredito: parseFloat(formData.limiteCredito) || 0,
                 activo: formData.activo,
@@ -219,7 +223,7 @@ export default function SociosPage() {
           dni: formData.dni || undefined,
           telefono: formData.telefono || undefined,
           email: formData.email || undefined,
-          fechaRegistro: new Date(formData.fechaRegistro),
+          fechaRegistro: fechaRegistro,
           tipo: formData.tipo,
           saldo: 0,
           limiteCredito: parseFloat(formData.limiteCredito) || 0,
