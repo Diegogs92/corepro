@@ -63,8 +63,8 @@ export default function Modal({
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
-          <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-slate-700">
-            <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-100">{title}</h2>
+          <div className="flex items-center justify-between px-5 py-3 border-b border-slate-200 dark:border-slate-700">
+            <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">{title}</h2>
             <button
               onClick={onClose}
               className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
@@ -74,7 +74,7 @@ export default function Modal({
           </div>
 
           {/* Body */}
-          <div className="px-6 py-4 max-h-[calc(100vh-200px)] overflow-y-auto">
+          <div className="px-5 py-3 max-h-[calc(100vh-160px)] overflow-y-auto">
             {children}
           </div>
         </div>

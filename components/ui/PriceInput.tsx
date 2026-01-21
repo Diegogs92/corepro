@@ -57,7 +57,7 @@ export default function PriceInput({
 
   return (
     <div className={className}>
-      <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+      <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-0.5">
         {label}
         {required && <span className="text-danger-500 ml-1">*</span>}
       </label>
@@ -75,7 +75,7 @@ export default function PriceInput({
               onChange={(e) => handleValueChange(e.target.value)}
               disabled={disabled}
               required={required}
-              className="w-full pl-10 pr-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg
+              className="w-full pl-10 pr-4 py-1.5 border border-slate-300 dark:border-slate-600 rounded-lg
                        bg-white dark:bg-slate-700
                        text-slate-900 dark:text-slate-100
                        placeholder-slate-400 dark:placeholder-slate-500
@@ -91,7 +91,7 @@ export default function PriceInput({
             value={currency}
             onChange={(e) => handleCurrencyChange(e.target.value as "ARS" | "USD")}
             disabled={disabled}
-            className="px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg
+            className="px-4 py-1.5 border border-slate-300 dark:border-slate-600 rounded-lg
                      bg-white dark:bg-slate-700
                      text-slate-900 dark:text-slate-100
                      transition-colors duration-200 hover:border-slate-400 dark:hover:border-slate-500
