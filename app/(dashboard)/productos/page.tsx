@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import Header from "@/components/layout/Header";
@@ -34,14 +34,15 @@ import {
   Eye,
 } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
-import type { Producto, CategoriaProducto, UnidadMedida } from "@/lib/types";
+import type { Producto, CategoriaProducto, MovimientoStock, UnidadMedida } from "@/lib/types";
+import { mockCategoriasProductos } from "@/lib/mockData";
 import {
-  mockCategoriasProductos,
-  mockMovimientosStock,
-} from "@/lib/mockData";
-import { categoriasProductosService, productosService } from "@/lib/firebaseService";
+  categoriasProductosService,
+  movimientosStockService,
+  productosService,
+} from "@/lib/firebaseService";
 
-// Tipo extendido para incluir categoría
+// Tipo extendido para incluir categor+¡a
 interface ProductoConCategoria extends Producto {
   categoria?: CategoriaProducto;
 }
@@ -53,6 +54,7 @@ export default function ProductosPage() {
 
   const [productos, setProductos] = useState<ProductoConCategoria[]>([]);
   const [categorias, setCategorias] = useState<CategoriaProducto[]>([]);
+  const [movimientosStock, setMovimientosStock] = useState<MovimientoStock[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [showDetalles, setShowDetalles] = useState(false);
   const [productoSeleccionado, setProductoSeleccionado] = useState<ProductoConCategoria | null>(
@@ -61,7 +63,7 @@ export default function ProductosPage() {
   const [saving, setSaving] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
 
-  // Estado para confirmación de eliminación
+  // Estado para confirmaci+¦n de eliminaci+¦n
   const [showConfirmDelete, setShowConfirmDelete] = useState(false);
   const [productoToDelete, setProductoToDelete] = useState<ProductoConCategoria | null>(null);
   const [deleting, setDeleting] = useState(false);
@@ -88,7 +90,6 @@ export default function ProductosPage() {
     categoriaId: "",
     nombre: "",
     variedad: "",
-    descripcion: "",
     unidadMedida: "GRAMOS" as UnidadMedida,
     precioBase: "",
     precioBaseCurrency: "ARS" as "ARS" | "USD",
@@ -97,7 +98,6 @@ export default function ProductosPage() {
     thc: "",
     cbd: "",
     activo: true,
-    notas: "",
   });
 
   // ============================================================================
@@ -118,9 +118,10 @@ export default function ProductosPage() {
 
   const loadData = async () => {
     try {
-      const [productosData, categoriasData] = await Promise.all([
+      const [productosData, categoriasData, movimientosData] = await Promise.all([
         productosService.getAll(),
         categoriasProductosService.getAll(),
+        movimientosStockService.getAll(),
       ]);
       const categoriasFinal =
         categoriasData.length > 0 ? categoriasData : mockCategoriasProductos;
@@ -133,14 +134,15 @@ export default function ProductosPage() {
 
       setProductos(productosConCategoria);
       setCategorias(categoriasFinal);
+      setMovimientosStock(movimientosData);
     } catch (error) {
       console.error("Error cargando productos:", error);
-      alert("Error cargando productos. Verifica la configuración de Firebase.");
+      alert("Error cargando productos. Verifica la configuraci+¦n de Firebase.");
     }
   };
 
   // ============================================================================
-  // CÁLCULO DE ESTADÍSTICAS
+  // C+üLCULO DE ESTAD+ìSTICAS
   // ============================================================================
 
   const calculateStats = () => {
@@ -192,7 +194,7 @@ export default function ProductosPage() {
       return (
         <Badge variant="danger">
           <XCircle className="h-3 w-3 mr-1" />
-          Crítico
+          Cr+¡tico
         </Badge>
       );
     } else if (status === "bajo") {
@@ -233,7 +235,7 @@ export default function ProductosPage() {
   // ============================================================================
 
   const productosFiltrados = productos.filter((producto) => {
-    // Filtro por categoría
+    // Filtro por categor+¡a
     if (filtroCategoria !== "TODOS" && producto.categoriaId !== filtroCategoria) {
       return false;
     }
@@ -248,7 +250,7 @@ export default function ProductosPage() {
     if (filtroStock === "BAJO" && status !== "bajo") return false;
     if (filtroStock === "OK" && status !== "ok") return false;
 
-    // Búsqueda por texto
+    // B+¦squeda por texto
     if (searchTerm) {
       const search = searchTerm.toLowerCase();
       return (
@@ -274,7 +276,6 @@ export default function ProductosPage() {
         categoriaId: formData.categoriaId,
         nombre: formData.nombre,
         variedad: formData.variedad || undefined,
-        descripcion: formData.descripcion || undefined,
         unidadMedida: formData.unidadMedida,
         precioBase: parseFloat(formData.precioBase),
         precioBaseCurrency: formData.precioBaseCurrency,
@@ -283,7 +284,6 @@ export default function ProductosPage() {
         thc: formData.thc ? parseFloat(formData.thc) : undefined,
         cbd: formData.cbd ? parseFloat(formData.cbd) : undefined,
         activo: formData.activo,
-        notas: formData.notas || undefined,
       } as Omit<Producto, "id">;
 
       if (editingId) {
@@ -309,7 +309,6 @@ export default function ProductosPage() {
       categoriaId: producto.categoriaId,
       nombre: producto.nombre,
       variedad: producto.variedad || "",
-      descripcion: producto.descripcion || "",
       unidadMedida: producto.unidadMedida,
       precioBase: producto.precioBase.toString(),
       precioBaseCurrency: producto.precioBaseCurrency || "ARS",
@@ -318,7 +317,6 @@ export default function ProductosPage() {
       thc: producto.thc?.toString() || "",
       cbd: producto.cbd?.toString() || "",
       activo: producto.activo,
-      notas: producto.notas || "",
     });
     setEditingId(producto.id);
     setShowForm(true);
@@ -357,7 +355,6 @@ export default function ProductosPage() {
       categoriaId: "",
       nombre: "",
       variedad: "",
-      descripcion: "",
       unidadMedida: "GRAMOS",
       precioBase: "",
       precioBaseCurrency: "ARS",
@@ -366,7 +363,6 @@ export default function ProductosPage() {
       thc: "",
       cbd: "",
       activo: true,
-      notas: "",
     });
     setEditingId(null);
     setShowForm(false);
@@ -379,7 +375,7 @@ export default function ProductosPage() {
   const renderModalDetalles = () => {
     if (!productoSeleccionado) return null;
 
-    const movimientos = mockMovimientosStock.filter(
+    const movimientos = movimientosStock.filter(
       (m) => m.productoId === productoSeleccionado.id
     );
 
@@ -394,15 +390,15 @@ export default function ProductosPage() {
         size="xl"
       >
         <div className="space-y-6">
-          {/* Información del Producto */}
+          {/* Informaci+¦n del Producto */}
           <div>
             <h3 className="text-lg font-semibold mb-3 text-slate-900 dark:text-slate-100">
-              Información del Producto
+              Informaci+¦n del Producto
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <p className="text-sm font-medium text-slate-600 dark:text-slate-400">
-                  Categoría
+                  Categor+¡a
                 </p>
                 <p className="text-slate-900 dark:text-slate-100">
                   {productoSeleccionado.categoria?.nombre || "-"}
@@ -453,7 +449,7 @@ export default function ProductosPage() {
             </div>
           </div>
 
-          {/* Estadísticas */}
+          {/* Estad+¡sticas */}
           <div>
             <h3 className="text-lg font-semibold mb-3 text-slate-900 dark:text-slate-100">
               Inventario y Precios
@@ -475,7 +471,7 @@ export default function ProductosPage() {
               <Card>
                 <CardContent className="p-4">
                   <p className="text-sm font-medium text-slate-600 dark:text-slate-400">
-                    Stock Mínimo
+                    Stock M+¡nimo
                   </p>
                   <p className="text-2xl font-bold text-amber-600 dark:text-amber-400">
                     {productoSeleccionado.stockMinimo}
@@ -507,34 +503,10 @@ export default function ProductosPage() {
             </div>
           </div>
 
-          {/* Descripción */}
-          {productoSeleccionado.descripcion && (
-            <div>
-              <h3 className="text-lg font-semibold mb-3 text-slate-900 dark:text-slate-100">
-                Descripción
-              </h3>
-              <p className="text-slate-600 dark:text-slate-400 whitespace-pre-wrap">
-                {productoSeleccionado.descripcion}
-              </p>
-            </div>
-          )}
-
-          {/* Notas */}
-          {productoSeleccionado.notas && (
-            <div>
-              <h3 className="text-lg font-semibold mb-3 text-slate-900 dark:text-slate-100">
-                Notas
-              </h3>
-              <p className="text-slate-600 dark:text-slate-400 whitespace-pre-wrap">
-                {productoSeleccionado.notas}
-              </p>
-            </div>
-          )}
-
-          {/* Últimos Movimientos */}
+          {/* +Ültimos Movimientos */}
           <div>
             <h3 className="text-lg font-semibold mb-3 text-slate-900 dark:text-slate-100">
-              Últimos Movimientos de Stock
+              +Ültimos Movimientos de Stock
             </h3>
             {movimientos.length === 0 ? (
               <p className="text-center py-8 text-slate-500 dark:text-slate-400">
@@ -597,11 +569,11 @@ export default function ProductosPage() {
 
   return (
     <div>
-      <Header title="Productos" subtitle="Catálogo y gestión de productos" />
+      <Header title="Productos" subtitle="Cat+ílogo y gesti+¦n de productos" />
 
       <div className="p-4 sm:p-6 lg:p-8">
         {/* ====================================================================== */}
-        {/* ESTADÍSTICAS */}
+        {/* ESTAD+ìSTICAS */}
         {/* ====================================================================== */}
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5 mb-8">
@@ -662,13 +634,13 @@ export default function ProductosPage() {
             </CardContent>
           </Card>
 
-          {/* Stock Crítico */}
+          {/* Stock Cr+¡tico */}
           <Card>
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-slate-600 dark:text-slate-400">
-                    Stock Crítico
+                    Stock Cr+¡tico
                   </p>
                   <p className="mt-2 text-3xl font-bold text-danger-600 dark:text-danger-400">
                     {stats.stockCritico}
@@ -709,7 +681,7 @@ export default function ProductosPage() {
           <CardHeader>
             <div className="flex flex-col gap-4">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                <CardTitle>Catálogo de Productos</CardTitle>
+                <CardTitle>Cat+ílogo de Productos</CardTitle>
                 <Button onClick={() => setShowForm(true)} size="sm">
                   <Plus className="h-4 w-4 mr-2" />
                   Nuevo Producto
@@ -728,7 +700,7 @@ export default function ProductosPage() {
                   value={filtroCategoria}
                   onChange={(e) => setFiltroCategoria(e.target.value)}
                   options={[
-                    { value: "TODOS", label: "Todas las categorías" },
+                    { value: "TODOS", label: "Todas las categor+¡as" },
                     ...categorias.map((c) => ({
                       value: c.id,
                       label: c.nombre,
@@ -751,7 +723,7 @@ export default function ProductosPage() {
                   onChange={(e) => setFiltroStock(e.target.value as any)}
                   options={[
                     { value: "TODOS", label: "Todo el stock" },
-                    { value: "CRITICO", label: "Stock crítico" },
+                    { value: "CRITICO", label: "Stock cr+¡tico" },
                     { value: "BAJO", label: "Stock bajo" },
                     { value: "OK", label: "Stock OK" },
                   ]}
@@ -767,7 +739,7 @@ export default function ProductosPage() {
                 <p className="text-lg font-medium">No hay productos registrados</p>
                 <p className="text-sm mt-1">
                   {searchTerm || filtroCategoria !== "TODOS" || filtroEstado !== "TODOS"
-                    ? "Intenta cambiar los filtros de búsqueda"
+                    ? "Intenta cambiar los filtros de b+¦squeda"
                     : "Comienza agregando tu primer producto"}
                 </p>
               </div>
@@ -777,10 +749,10 @@ export default function ProductosPage() {
                   <TableHeader>
                     <TableRow>
                       <TableHead>Producto</TableHead>
-                      <TableHead>Categoría</TableHead>
+                      <TableHead>Categor+¡a</TableHead>
                       <TableHead>Variedad</TableHead>
                       <TableHead className="text-right">Stock</TableHead>
-                      <TableHead className="text-right">Mín.</TableHead>
+                      <TableHead className="text-right">M+¡n.</TableHead>
                       <TableHead>Estado Stock</TableHead>
                       <TableHead className="text-right">Precio Base</TableHead>
                       <TableHead className="text-right">Valor Total</TableHead>
@@ -801,7 +773,7 @@ export default function ProductosPage() {
                         </TableCell>
                         <TableCell>
                           <Badge variant="default">
-                            {producto.categoria?.nombre || "Sin categoría"}
+                            {producto.categoria?.nombre || "Sin categor+¡a"}
                           </Badge>
                         </TableCell>
                         <TableCell className="text-slate-600 dark:text-slate-400">
@@ -864,19 +836,19 @@ export default function ProductosPage() {
         isOpen={showForm}
         onClose={resetForm}
         title={editingId ? "Editar Producto" : "Nuevo Producto"}
-        size="xl"
+        size="lg"
       >
         <form onSubmit={handleSubmit}>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Categoría */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {/* Categor+¡a */}
             <Select
-              label="Categoría"
+              label="Categor+¡a"
               value={formData.categoriaId}
               onChange={(e) =>
                 setFormData({ ...formData, categoriaId: e.target.value })
               }
               options={[
-                { value: "", label: "Selecciona una categoría" },
+                { value: "", label: "Selecciona una categor+¡a" },
                 ...categorias.map((c) => ({
                   value: c.id,
                   label: c.nombre,
@@ -930,9 +902,9 @@ export default function ProductosPage() {
               required
             />
 
-            {/* Stock Mínimo */}
+            {/* Stock M+¡nimo */}
             <Input
-              label="Stock Mínimo"
+              label="Stock M+¡nimo"
               type="number"
               step="0.01"
               min="0"
@@ -997,38 +969,9 @@ export default function ProductosPage() {
               </label>
             </div>
 
-            {/* Descripción */}
-            <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                Descripción
-              </label>
-              <textarea
-                value={formData.descripcion}
-                onChange={(e) =>
-                  setFormData({ ...formData, descripcion: e.target.value })
-                }
-                placeholder="Descripción del producto..."
-                rows={3}
-                className="w-full rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
-              />
-            </div>
-
-            {/* Notas */}
-            <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                Notas
-              </label>
-              <textarea
-                value={formData.notas}
-                onChange={(e) => setFormData({ ...formData, notas: e.target.value })}
-                placeholder="Notas adicionales sobre el producto..."
-                rows={2}
-                className="w-full rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
-              />
-            </div>
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-2 mt-6">
+          <div className="flex flex-col sm:flex-row gap-2 mt-4">
             <Button type="submit" disabled={saving}>
               {saving
                 ? "Guardando..."
@@ -1051,7 +994,7 @@ export default function ProductosPage() {
       {/* Modal de Detalles */}
       {renderModalDetalles()}
 
-      {/* Diálogo de Confirmación */}
+      {/* Di+ílogo de Confirmaci+¦n */}
       <ConfirmDialog
         isOpen={showConfirmDelete}
         onClose={() => {
@@ -1060,7 +1003,7 @@ export default function ProductosPage() {
         }}
         onConfirm={confirmDelete}
         title="Desactivar Producto"
-        message={`¿Estás seguro de desactivar el producto "${productoToDelete?.nombre}"? El producto no se eliminará, solo se marcará como inactivo.`}
+        message={`-+Est+ís seguro de desactivar el producto "${productoToDelete?.nombre}"? El producto no se eliminar+í, solo se marcar+í como inactivo.`}
         confirmText="Desactivar"
         cancelText="Cancelar"
         variant="warning"
@@ -1069,3 +1012,6 @@ export default function ProductosPage() {
     </div>
   );
 }
+
+
+

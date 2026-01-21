@@ -18,13 +18,14 @@ import Select from "@/components/ui/Select";
 import { Plus, Package, Search, Edit, Trash2, AlertTriangle, TrendingDown, TrendingUp } from "lucide-react";
 import { formatCurrency, getStockStatus } from "@/lib/utils";
 import type { Producto, CategoriaProducto, MovimientoStock, UnidadMedida } from "@/lib/types";
-import {
-  mockProductos,
-  mockCategoriasProductos,
-  mockMovimientosStock,
-} from "@/lib/mockData";
+import { mockCategoriasProductos } from "@/lib/mockData";
 import Modal from "@/components/ui/Modal";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
+import {
+  categoriasProductosService,
+  movimientosStockService,
+  productosService,
+} from "@/lib/firebaseService";
 
 export default function StockPage() {
   const [productos, setProductos] = useState<Producto[]>([]);
@@ -48,7 +49,6 @@ export default function StockPage() {
     nombre: "",
     categoriaId: "",
     variedad: "",
-    descripcion: "",
     unidadMedida: "GRAMOS" as UnidadMedida,
     stockActual: "",
     stockMinimo: "",
@@ -73,10 +73,23 @@ export default function StockPage() {
     calculateStats();
   }, [searchTerm, categoriaFilter, productos]);
 
-  const loadData = () => {
-    setProductos(mockProductos);
-    setCategorias(mockCategoriasProductos);
-    setMovimientos(mockMovimientosStock);
+  const loadData = async () => {
+    try {
+      const [productosData, categoriasData, movimientosData] = await Promise.all([
+        productosService.getAll(),
+        categoriasProductosService.getAll(),
+        movimientosStockService.getAll(),
+      ]);
+      const categoriasFinal =
+        categoriasData.length > 0 ? categoriasData : mockCategoriasProductos;
+
+      setProductos(productosData);
+      setCategorias(categoriasFinal);
+      setMovimientos(movimientosData);
+    } catch (error) {
+      console.error("Error cargando stock:", error);
+      alert("Error cargando stock. Verifica la configuración de Firebase.");
+    }
   };
 
   const filterProductos = () => {
@@ -118,27 +131,28 @@ export default function StockPage() {
     setSaving(true);
 
     try {
-      const nuevoProducto: Producto = {
-        id: editingId || `prod-${Date.now()}`,
+      const existing = editingId ? productos.find((p) => p.id === editingId) : null;
+      const productoPayload = {
         categoriaId: formData.categoriaId,
         nombre: formData.nombre,
         variedad: formData.variedad || undefined,
-        descripcion: formData.descripcion || undefined,
         unidadMedida: formData.unidadMedida,
         stockActual: parseFloat(formData.stockActual),
         stockMinimo: parseFloat(formData.stockMinimo),
         precioBase: parseFloat(formData.precioBase),
-        activo: true,
+        precioBaseCurrency: existing?.precioBaseCurrency || "ARS",
+        activo: existing?.activo ?? true,
         thc: formData.thc ? parseFloat(formData.thc) : undefined,
         cbd: formData.cbd ? parseFloat(formData.cbd) : undefined,
-      };
+      } as Omit<Producto, "id">;
 
-      // TODO: Guardar en Firebase
       if (editingId) {
-        setProductos(productos.map((p) => (p.id === editingId ? nuevoProducto : p)));
+        await productosService.update(editingId, productoPayload);
       } else {
-        setProductos([...productos, nuevoProducto]);
+        await productosService.create(productoPayload);
       }
+
+      await loadData();
 
       resetForm();
     } catch (error) {
@@ -154,7 +168,6 @@ export default function StockPage() {
       nombre: "",
       categoriaId: "",
       variedad: "",
-      descripcion: "",
       unidadMedida: "GRAMOS",
       stockActual: "",
       stockMinimo: "",
@@ -171,7 +184,6 @@ export default function StockPage() {
       nombre: producto.nombre,
       categoriaId: producto.categoriaId,
       variedad: producto.variedad || "",
-      descripcion: producto.descripcion || "",
       unidadMedida: producto.unidadMedida,
       stockActual: producto.stockActual.toString(),
       stockMinimo: producto.stockMinimo.toString(),
@@ -193,7 +205,8 @@ export default function StockPage() {
 
     setDeleting(true);
     try {
-      setProductos(productos.filter((p) => p.id !== productoToDelete.id));
+      await productosService.update(productoToDelete.id, { activo: false });
+      await loadData();
       setShowConfirmDelete(false);
       setProductoToDelete(null);
     } catch (error) {
@@ -445,7 +458,7 @@ export default function StockPage() {
         size="lg"
       >
         <form onSubmit={handleSubmit}>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <Input
               label="Nombre del Producto"
               value={formData.nombre}
@@ -534,19 +547,9 @@ export default function StockPage() {
               placeholder="Ej: 0.8"
             />
 
-            <div className="md:col-span-2">
-              <label className="block text-sm font-medium mb-1">Descripción (opcional)</label>
-              <textarea
-                className="w-full rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2"
-                rows={2}
-                value={formData.descripcion}
-                onChange={(e) => setFormData({ ...formData, descripcion: e.target.value })}
-                placeholder="Descripción del producto..."
-              />
-            </div>
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-2 mt-6">
+          <div className="flex flex-col sm:flex-row gap-2 mt-4">
             <Button type="submit" disabled={saving}>
               {saving ? "Guardando..." : editingId ? "Actualizar" : "Guardar"}
             </Button>
@@ -648,13 +651,14 @@ export default function StockPage() {
           setProductoToDelete(null);
         }}
         onConfirm={confirmDelete}
-        title="Eliminar Producto"
-        message={`¿Estás seguro de eliminar el producto "${productoToDelete?.nombre}"? Esta acción no se puede deshacer.`}
-        confirmText="Eliminar"
+        title="Desactivar Producto"
+        message={`¿Estás seguro de desactivar el producto "${productoToDelete?.nombre}"? El producto no se eliminará, solo se marcará como inactivo.`}
+        confirmText="Desactivar"
         cancelText="Cancelar"
-        variant="danger"
+        variant="warning"
         loading={deleting}
       />
     </div>
   );
 }
+
