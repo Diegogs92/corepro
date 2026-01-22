@@ -7,9 +7,10 @@ import {
   onAuthStateChanged,
   User as FirebaseUser
 } from "firebase/auth";
-import { doc, getDoc } from "firebase/firestore";
+import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
 import { useRouter } from "next/navigation";
+import { formatUsername } from "@/lib/utils";
 
 interface User {
   uid: string;
@@ -40,20 +41,37 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Escuchar cambios en el estado de autenticación
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
+        const normalizeUsername = (value: string | null) => formatUsername(value || "");
         // Usuario autenticado - obtener datos adicionales de Firestore
         try {
           const userDoc = await getDoc(doc(db, "usuarios", firebaseUser.uid));
           if (userDoc.exists()) {
             const userData = userDoc.data();
+            const username = normalizeUsername(userData.username || firebaseUser.email);
             setUser({
               uid: firebaseUser.uid,
-              username: userData.username,
+              username: username,
               email: userData.email || null,
             });
           } else {
             // Si no existe documento en Firestore, usar datos de Firebase Auth
-            const virtualEmail = firebaseUser.email || "";
-            const username = virtualEmail.replace("@thegardenboys.local", "");
+            const username = normalizeUsername(firebaseUser.email);
+            try {
+              await setDoc(doc(db, "usuarios", firebaseUser.uid), {
+                username: username,
+                nombre: username,
+                apellido: null,
+                email: null,
+                rol: "OPERADOR",
+                activo: true,
+                fechaCreacion: serverTimestamp(),
+                telefono: null,
+                avatar: null,
+                notas: null,
+              });
+            } catch (writeError) {
+              console.warn("No se pudo crear el usuario en Firestore:", writeError);
+            }
             setUser({
               uid: firebaseUser.uid,
               username: username,
@@ -63,8 +81,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         } catch (error) {
           console.error("Error obteniendo datos del usuario:", error);
           // Fallback a datos de Firebase Auth
-          const virtualEmail = firebaseUser.email || "";
-          const username = virtualEmail.replace("@thegreenboys.local", "");
+          const username = normalizeUsername(firebaseUser.email);
           setUser({
             uid: firebaseUser.uid,
             username: username,

@@ -36,3 +36,9 @@ export function getStockStatus(cantidadActual: number, stockMinimo: number): 'cr
   if (cantidadActual <= stockMinimo) return 'bajo';
   return 'ok';
 }
+
+export function formatUsername(username: string | null | undefined): string {
+  if (!username) return "";
+  const atIndex = username.indexOf("@");
+  return atIndex === -1 ? username : username.slice(0, atIndex);
+}

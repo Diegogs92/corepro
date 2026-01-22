@@ -32,7 +32,7 @@ import {
   Calendar,
   Clock,
 } from "lucide-react";
-import { formatDate } from "@/lib/utils";
+import { formatDate, formatUsername } from "@/lib/utils";
 import type { Usuario, RolUsuario } from "@/lib/types";
 import { getUsuarios, createUsuario, updateUsuario, deleteUsuario } from "@/lib/firestore/usuarios";
 
@@ -486,13 +486,13 @@ export default function UsuariosPage() {
                             {usuario.nombre} {usuario.apellido}
                           </p>
                           <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                            {usuario.username}
+                            {formatUsername(usuario.username)}
                           </p>
                         </div>
                       </TableCell>
                       <TableCell className="text-slate-600 dark:text-slate-400">
                         <code className="text-xs bg-slate-100 dark:bg-slate-700 px-2 py-1 rounded">
-                          {usuario.username}
+                          {formatUsername(usuario.username)}
                         </code>
                       </TableCell>
                       <TableCell>{getRolBadge(usuario.rol)}</TableCell>
@@ -571,7 +571,7 @@ export default function UsuariosPage() {
                 </p>
                 <p className="text-slate-900 dark:text-slate-100">
                   <code className="text-sm bg-slate-100 dark:bg-slate-700 px-2 py-1 rounded">
-                    {usuarioSeleccionado.username}
+                    {formatUsername(usuarioSeleccionado.username)}
                   </code>
                 </p>
               </div>

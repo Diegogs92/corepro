@@ -44,6 +44,13 @@ service cloud.firestore {
       allow write: if false; // Solo admin puede modificar
     }
 
+    // USUARIOS - Lectura y escritura para autenticados
+    match /usuarios/{usuarioId} {
+      allow read: if isAuthenticated();
+      allow create, update: if isAuthenticated();
+      allow delete: if false; // Solo marcar como inactivo
+    }
+
     // CATEGORÍAS DE PRODUCTOS - Lectura para todos
     match /categoriasProductos/{categoriaId} {
       allow read: if true;

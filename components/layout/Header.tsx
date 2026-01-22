@@ -3,6 +3,7 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { LogOut } from "lucide-react";
 import Button from "@/components/ui/Button";
+import { formatUsername } from "@/lib/utils";
 
 interface HeaderProps {
   title: string;
@@ -30,7 +31,7 @@ export default function Header({ title, subtitle }: HeaderProps) {
         <div className="flex items-center gap-3">
           <div className="text-left sm:text-right">
             <p className="text-sm font-medium text-slate-900 dark:text-slate-100">
-              {user?.username}
+              {formatUsername(user?.username)}
             </p>
             <p className="text-xs text-slate-500 dark:text-slate-400">Administrador</p>
           </div>
