@@ -282,6 +282,22 @@ export default function SociosPage() {
     setShowDetalles(true);
   };
 
+  const handleToggleActivo = async (socio: SocioConStats, nextActivo: boolean) => {
+    setSocios((prev) =>
+      prev.map((item) => (item.id === socio.id ? { ...item, activo: nextActivo } : item))
+    );
+
+    try {
+      await sociosService.update(socio.id, { activo: nextActivo });
+    } catch (error) {
+      console.error("Error actualizando estado del socio:", error);
+      setSocios((prev) =>
+        prev.map((item) => (item.id === socio.id ? { ...item, activo: socio.activo } : item))
+      );
+      alert("Error al actualizar el estado del socio.");
+    }
+  };
+
   const resetForm = () => {
     setFormData({
       nombre: "",
@@ -730,6 +746,7 @@ export default function SociosPage() {
                       <TableHead className="text-right">Cant. Compras</TableHead>
                       <TableHead>Saldo</TableHead>
                       <TableHead>Estado</TableHead>
+                      <TableHead>Activo</TableHead>
                       <TableHead className="text-right">Acciones</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -760,6 +777,17 @@ export default function SociosPage() {
                         </TableCell>
                         <TableCell>{getSaldoBadge(socio.saldo)}</TableCell>
                         <TableCell>{getEstadoBadge(socio.activo)}</TableCell>
+                        <TableCell>
+                          <label className="inline-flex items-center cursor-pointer">
+                            <input
+                              type="checkbox"
+                              className="sr-only peer"
+                              checked={socio.activo}
+                              onChange={(e) => handleToggleActivo(socio, e.target.checked)}
+                            />
+                            <div className="w-10 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:bg-primary-600 relative after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:h-4 after:w-4 after:rounded-full after:transition-all peer-checked:after:translate-x-5" />
+                          </label>
+                        </TableCell>
                         <TableCell className="text-right">
                           <div className="inline-flex items-center gap-2">
                             <Button
