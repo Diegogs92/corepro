@@ -33,6 +33,7 @@ import type {
 import {
   camasService,
   cultivosService,
+  cultivosServiceExtended,
   geneticasService,
   macetasService,
   registrosCultivoService,
@@ -81,6 +82,7 @@ export default function CultivosPage() {
   const [showConfirmDelete, setShowConfirmDelete] = useState(false);
   const [showRegistroForm, setShowRegistroForm] = useState(false);
   const [showCambioEtapa, setShowCambioEtapa] = useState(false);
+  const [dragOverTarget, setDragOverTarget] = useState<string | null>(null);
 
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -88,6 +90,11 @@ export default function CultivosPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [cultivoSeleccionado, setCultivoSeleccionado] = useState<CultivoConRelaciones | null>(null);
   const [registroTab, setRegistroTab] = useState<TipoRegistroCultivo>("ETAPA");
+  const [dragPayload, setDragPayload] = useState<
+    | { type: "new"; origen: "palette" }
+    | { type: "cultivo"; cultivoId: string }
+    | null
+  >(null);
 
   const [filters, setFilters] = useState({
     search: "",
@@ -280,6 +287,21 @@ export default function CultivosPage() {
     return data;
   }, [cultivos, filters]);
 
+  const macetasOcupadas = useMemo(() => {
+    const ocupadas = new Set<string>();
+    cultivos.forEach((cultivo) => {
+      if (
+        cultivo.macetaId &&
+        cultivo.estado === "ACTIVO" &&
+        cultivo.id !== editingId &&
+        !cultivo.deletedAt
+      ) {
+        ocupadas.add(cultivo.macetaId);
+      }
+    });
+    return ocupadas;
+  }, [cultivos, editingId]);
+
   const validateCultivo = async () => {
     const errors: string[] = [];
 
@@ -297,17 +319,6 @@ export default function CultivosPage() {
     if (formData.tipoUbicacion === "MACETA") {
       if (!formData.macetaId) errors.push("Debe seleccionar una maceta.");
       if (formData.camaId) errors.push("No se puede asignar cama si es maceta.");
-    }
-
-    if (formData.codigoInterno.trim()) {
-      const codigo = formData.codigoInterno.trim().toLowerCase();
-      const duplicado = cultivos.find(
-        (cultivo) =>
-          cultivo.codigoInterno?.toLowerCase() === codigo &&
-          cultivo.id !== editingId &&
-          !cultivo.deletedAt
-      );
-      if (duplicado) errors.push("El codigo interno ya esta en uso.");
     }
 
     if (formData.tipoUbicacion === "MACETA" && formData.estado === "ACTIVO") {
@@ -342,9 +353,10 @@ export default function CultivosPage() {
       const fechaInicio = new Date(formData.fechaInicio + "T00:00:00");
       const fechaFin = formData.fechaFin ? new Date(formData.fechaFin + "T00:00:00") : null;
 
+      const codigoInterno = editingId ? formData.codigoInterno.trim() || undefined : undefined;
       const payload: Omit<Cultivo, "id"> = {
         nombre: formData.nombre.trim(),
-        codigoInterno: formData.codigoInterno.trim() || undefined,
+        codigoInterno,
         tipoUbicacion: formData.tipoUbicacion,
         camaId: formData.tipoUbicacion === "CAMA" ? formData.camaId : null,
         macetaId: formData.tipoUbicacion === "MACETA" ? formData.macetaId : null,
@@ -407,7 +419,8 @@ export default function CultivosPage() {
           }
         }
       } else {
-        await cultivosService.create(payload);
+        const { codigoInterno: _codigoInterno, ...payloadSinCodigo } = payload;
+        await cultivosServiceExtended.createCultivoConCodigo(payloadSinCodigo);
       }
 
       await loadData();
@@ -475,6 +488,94 @@ export default function CultivosPage() {
       alert("Error al eliminar el cultivo.");
     } finally {
       setDeleting(false);
+    }
+  };
+
+  const buildUbicacionKey = (tipo: TipoUbicacionCultivo, id: string) =>
+    `${tipo}:${id}`;
+
+  const handleDragStart = (
+    event: React.DragEvent,
+    payload: { type: "new"; origen: "palette" } | { type: "cultivo"; cultivoId: string }
+  ) => {
+    setDragPayload(payload);
+    event.dataTransfer.setData("text/plain", JSON.stringify(payload));
+    event.dataTransfer.effectAllowed = "move";
+  };
+
+  const handleDropUbicacion = async (
+    event: React.DragEvent,
+    tipo: TipoUbicacionCultivo,
+    ubicacionId: string
+  ) => {
+    event.preventDefault();
+    setDragOverTarget(null);
+
+    let payload: typeof dragPayload = null;
+    try {
+      payload = JSON.parse(event.dataTransfer.getData("text/plain"));
+    } catch {
+      payload = dragPayload;
+    }
+
+    if (!payload) return;
+
+    if (payload.type === "new") {
+      resetForm();
+      setFormData((prev) => ({
+        ...prev,
+        tipoUbicacion: tipo,
+        camaId: tipo === "CAMA" ? ubicacionId : "",
+        macetaId: tipo === "MACETA" ? ubicacionId : "",
+      }));
+      setShowForm(true);
+      return;
+    }
+
+    const cultivo = cultivos.find((item) => item.id === payload.cultivoId);
+    if (!cultivo) return;
+
+    const ubicacionAnterior = buildUbicacionKey(
+      cultivo.tipoUbicacion,
+      cultivo.tipoUbicacion === "CAMA" ? cultivo.camaId || "" : cultivo.macetaId || ""
+    );
+    const ubicacionNueva = buildUbicacionKey(tipo, ubicacionId);
+
+    if (ubicacionAnterior === ubicacionNueva) return;
+
+    if (tipo === "MACETA" && cultivo.estado === "ACTIVO" && macetasOcupadas.has(ubicacionId)) {
+      alert("La maceta ya esta asignada a otro cultivo activo.");
+      return;
+    }
+
+    try {
+      const now = new Date();
+      await cultivosService.update(cultivo.id, {
+        tipoUbicacion: tipo,
+        camaId: tipo === "CAMA" ? ubicacionId : null,
+        macetaId: tipo === "MACETA" ? ubicacionId : null,
+        updatedAt: now,
+        updatedBy: user?.uid,
+      });
+
+      await registrosCultivoService.create({
+        cultivoId: cultivo.id,
+        tipo: "GENERAL",
+        fecha: now,
+        payload: {
+          evento: "CAMBIO_UBICACION",
+          ubicacionAnterior,
+          ubicacionNueva,
+        },
+        notas: "Movimiento en vivero",
+        createdAt: now,
+        createdBy: user?.uid,
+      });
+
+      await loadData();
+    } catch (error) {
+      console.error("Error moviendo cultivo:", error);
+      alert("Error al mover el cultivo.");
     }
   };
 
@@ -599,6 +700,156 @@ export default function CultivosPage() {
       <Header title="Cultivos" subtitle="Gestion y seguimiento de cultivos" />
 
       <div className="p-4 sm:p-6 lg:p-8">
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle>Vista vivero</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-wrap items-center gap-3 mb-4">
+              <div
+                className="inline-flex items-center gap-2 rounded-full border border-dashed border-slate-300 px-3 py-1.5 text-sm text-slate-600"
+                draggable
+                onDragStart={(event) => handleDragStart(event, { type: "new", origen: "palette" })}
+              >
+                <Leaf className="h-4 w-4" />
+                Nuevo cultivo
+              </div>
+              <span className="text-sm text-slate-500">
+                Arrastra un cultivo para moverlo o sueltalo en una cama/maceta para crear uno nuevo.
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <div className="rounded-lg border border-slate-200 p-3">
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-sm font-semibold text-slate-700">Camas</h3>
+                  <span className="text-xs text-slate-500">Vista superior</span>
+                </div>
+                {camas.length === 0 ? (
+                  <div className="rounded-md border border-dashed border-slate-300 px-3 py-6 text-sm text-slate-500 text-center">
+                    No hay camas cargadas.
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {camas.map((cama) => {
+                      const key = buildUbicacionKey("CAMA", cama.id);
+                      const cultivosCama = cultivos.filter(
+                        (cultivo) => cultivo.camaId === cama.id && !cultivo.deletedAt
+                      );
+                      return (
+                        <div
+                          key={cama.id}
+                          onDragOver={(event) => {
+                            event.preventDefault();
+                            setDragOverTarget(key);
+                          }}
+                          onDragLeave={() => setDragOverTarget(null)}
+                          onDrop={(event) => handleDropUbicacion(event, "CAMA", cama.id)}
+                          className={`rounded-lg border p-3 min-h-[120px] transition ${
+                            dragOverTarget === key
+                              ? "border-primary-400 bg-primary-50"
+                              : "border-slate-200 bg-white"
+                          }`}
+                        >
+                          <div className="flex items-center justify-between mb-2">
+                            <div>
+                              <p className="text-sm font-semibold text-slate-800">{cama.nombre}</p>
+                              {cama.ubicacion && (
+                                <p className="text-xs text-slate-500">{cama.ubicacion}</p>
+                              )}
+                            </div>
+                            {cama.capacidad && (
+                              <span className="text-xs text-slate-500">Cap. {cama.capacidad}</span>
+                            )}
+                          </div>
+                          <div className="flex flex-wrap gap-2">
+                            {cultivosCama.length === 0 ? (
+                              <span className="text-xs text-slate-400">Arrastra aqui</span>
+                            ) : (
+                              cultivosCama.map((cultivo) => (
+                                <span
+                                  key={cultivo.id}
+                                  draggable
+                                  onDragStart={(event) =>
+                                    handleDragStart(event, { type: "cultivo", cultivoId: cultivo.id })
+                                  }
+                                  className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-1 text-xs text-slate-700 cursor-move"
+                                >
+                                  <Leaf className="h-3 w-3" />
+                                  {cultivo.nombre}
+                                </span>
+                              ))
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
+              <div className="rounded-lg border border-slate-200 p-3">
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-sm font-semibold text-slate-700">Macetas</h3>
+                  <span className="text-xs text-slate-500">Vista superior</span>
+                </div>
+                {macetas.length === 0 ? (
+                  <div className="rounded-md border border-dashed border-slate-300 px-3 py-6 text-sm text-slate-500 text-center">
+                    No hay macetas cargadas.
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                    {macetas.map((maceta) => {
+                      const key = buildUbicacionKey("MACETA", maceta.id);
+                      const cultivoMaceta = cultivos.find(
+                        (cultivo) => cultivo.macetaId === maceta.id && !cultivo.deletedAt
+                      );
+                      const ocupada = macetasOcupadas.has(maceta.id);
+                      return (
+                        <div
+                          key={maceta.id}
+                          onDragOver={(event) => {
+                            event.preventDefault();
+                            setDragOverTarget(key);
+                          }}
+                          onDragLeave={() => setDragOverTarget(null)}
+                          onDrop={(event) => handleDropUbicacion(event, "MACETA", maceta.id)}
+                          className={`rounded-full border p-3 min-h-[110px] flex flex-col items-center justify-center text-center transition ${
+                            dragOverTarget === key
+                              ? "border-primary-400 bg-primary-50"
+                              : ocupada
+                              ? "border-slate-200 bg-slate-50"
+                              : "border-slate-200 bg-white"
+                          }`}
+                        >
+                          <p className="text-sm font-semibold text-slate-800">{maceta.nombre}</p>
+                          {cultivoMaceta ? (
+                            <span
+                              draggable
+                              onDragStart={(event) =>
+                                handleDragStart(event, { type: "cultivo", cultivoId: cultivoMaceta.id })
+                              }
+                              className="mt-2 inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-1 text-xs text-slate-700 cursor-move"
+                            >
+                              <Leaf className="h-3 w-3" />
+                              {cultivoMaceta.nombre}
+                            </span>
+                          ) : (
+                            <span className="mt-2 text-xs text-slate-400">Arrastra aqui</span>
+                          )}
+                          <span className="mt-1 text-[10px] text-slate-400">
+                            {ocupada ? "Ocupada" : "Disponible"}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
         <Card className="mb-6">
           <CardHeader>
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -782,84 +1033,198 @@ export default function CultivosPage() {
               onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
               required
             />
-            <Input
-              label="Codigo interno"
-              value={formData.codigoInterno}
-              onChange={(e) => setFormData({ ...formData, codigoInterno: e.target.value })}
-            />
-            <Select
-              label="Tipo ubicacion"
-              value={formData.tipoUbicacion}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  tipoUbicacion: e.target.value as TipoUbicacionCultivo,
-                  camaId: "",
-                  macetaId: "",
-                })
-              }
-              options={TIPOS_UBICACION.map((tipo) => ({ value: tipo, label: tipo }))}
-              required
-            />
-            {formData.tipoUbicacion === "CAMA" ? (
+            <div>
+              <Input
+                label="Codigo interno"
+                value={formData.codigoInterno}
+                placeholder="Se asigna al guardar"
+                disabled
+              />
+              <p className="mt-1 text-xs text-slate-500">
+                Se genera automaticamente y es consecutivo.
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-4 space-y-4">
+            <div>
+              <label className="block text-sm font-medium mb-1">Tipo ubicacion</label>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() =>
+                    setFormData({
+                      ...formData,
+                      tipoUbicacion: "CAMA",
+                      camaId: "",
+                      macetaId: "",
+                    })
+                  }
+                  className={`rounded-md border px-3 py-2 text-sm font-medium transition ${
+                    formData.tipoUbicacion === "CAMA"
+                      ? "border-primary-300 bg-primary-50 text-primary-700"
+                      : "border-slate-200 text-slate-600"
+                  }`}
+                >
+                  Cama
+                </button>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setFormData({
+                      ...formData,
+                      tipoUbicacion: "MACETA",
+                      camaId: "",
+                      macetaId: "",
+                    })
+                  }
+                  className={`rounded-md border px-3 py-2 text-sm font-medium transition ${
+                    formData.tipoUbicacion === "MACETA"
+                      ? "border-primary-300 bg-primary-50 text-primary-700"
+                      : "border-slate-200 text-slate-600"
+                  }`}
+                >
+                  Maceta
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-1">
+                {formData.tipoUbicacion === "CAMA" ? "Camas disponibles" : "Macetas disponibles"}
+              </label>
+              {formData.tipoUbicacion === "CAMA" ? (
+                camas.length === 0 ? (
+                  <div className="rounded-md border border-dashed border-slate-300 px-3 py-4 text-sm text-slate-500">
+                    No hay camas cargadas.
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                    {camas.map((cama) => {
+                      const selected = formData.camaId === cama.id;
+                      return (
+                        <button
+                          key={cama.id}
+                          type="button"
+                          onClick={() => setFormData({ ...formData, camaId: cama.id })}
+                          className={`rounded-lg border px-3 py-2 text-left text-sm transition ${
+                            selected
+                              ? "border-primary-300 bg-primary-50 text-primary-700"
+                              : "border-slate-200 text-slate-600"
+                          }`}
+                        >
+                          <div className="font-medium">{cama.nombre}</div>
+                          {cama.ubicacion && (
+                            <div className="text-xs text-slate-500">{cama.ubicacion}</div>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )
+              ) : macetas.length === 0 ? (
+                <div className="rounded-md border border-dashed border-slate-300 px-3 py-4 text-sm text-slate-500">
+                  No hay macetas cargadas.
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                  {macetas.map((maceta) => {
+                    const selected = formData.macetaId === maceta.id;
+                    const ocupada = macetasOcupadas.has(maceta.id);
+                    const disabled = ocupada && !selected;
+                    return (
+                      <button
+                        key={maceta.id}
+                        type="button"
+                        disabled={disabled}
+                        onClick={() => setFormData({ ...formData, macetaId: maceta.id })}
+                        className={`rounded-lg border px-3 py-2 text-left text-sm transition ${
+                          selected
+                            ? "border-primary-300 bg-primary-50 text-primary-700"
+                            : "border-slate-200 text-slate-600"
+                        } ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}
+                      >
+                        <div className="font-medium">{maceta.nombre}</div>
+                        <div className="text-xs text-slate-500">
+                          {ocupada ? "Ocupada" : "Disponible"}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-1">Genetica</label>
+              {geneticas.length === 0 ? (
+                <div className="rounded-md border border-dashed border-slate-300 px-3 py-4 text-sm text-slate-500">
+                  No hay geneticas cargadas.
+                </div>
+              ) : (
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setFormData({ ...formData, geneticaId: "" })}
+                    className={`rounded-full border px-3 py-1.5 text-sm transition ${
+                      formData.geneticaId === ""
+                        ? "border-primary-300 bg-primary-50 text-primary-700"
+                        : "border-slate-200 text-slate-600"
+                    }`}
+                  >
+                    Sin genetica
+                  </button>
+                  {geneticas.map((genetica) => (
+                    <button
+                      key={genetica.id}
+                      type="button"
+                      onClick={() => setFormData({ ...formData, geneticaId: genetica.id })}
+                      className={`rounded-full border px-3 py-1.5 text-sm transition ${
+                        formData.geneticaId === genetica.id
+                          ? "border-primary-300 bg-primary-50 text-primary-700"
+                          : "border-slate-200 text-slate-600"
+                      }`}
+                    >
+                      {genetica.nombre}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <Select
-                label="Cama"
-                value={formData.camaId}
-                onChange={(e) => setFormData({ ...formData, camaId: e.target.value })}
-                options={[
-                  { value: "", label: "Seleccionar cama" },
-                  ...camas.map((cama) => ({ value: cama.id, label: cama.nombre })),
-                ]}
+                label="Etapa actual"
+                value={formData.etapaActual}
+                onChange={(e) =>
+                  setFormData({ ...formData, etapaActual: e.target.value as EtapaCultivo })
+                }
+                options={ETAPAS.map((etapa) => ({ value: etapa, label: etapa }))}
                 required
               />
-            ) : (
               <Select
-                label="Maceta"
-                value={formData.macetaId}
-                onChange={(e) => setFormData({ ...formData, macetaId: e.target.value })}
-                options={[
-                  { value: "", label: "Seleccionar maceta" },
-                  ...macetas.map((maceta) => ({ value: maceta.id, label: maceta.nombre })),
-                ]}
+                label="Estado"
+                value={formData.estado}
+                onChange={(e) =>
+                  setFormData({ ...formData, estado: e.target.value as EstadoCultivo })
+                }
+                options={ESTADOS.map((estado) => ({ value: estado, label: estado }))}
                 required
               />
-            )}
-            <Select
-              label="Genetica"
-              value={formData.geneticaId}
-              onChange={(e) => setFormData({ ...formData, geneticaId: e.target.value })}
-              options={[
-                { value: "", label: "Sin genetica" },
-                ...geneticas.map((genetica) => ({ value: genetica.id, label: genetica.nombre })),
-              ]}
-            />
-            <Select
-              label="Etapa actual"
-              value={formData.etapaActual}
-              onChange={(e) => setFormData({ ...formData, etapaActual: e.target.value as EtapaCultivo })}
-              options={ETAPAS.map((etapa) => ({ value: etapa, label: etapa }))}
-              required
-            />
-            <Select
-              label="Estado"
-              value={formData.estado}
-              onChange={(e) => setFormData({ ...formData, estado: e.target.value as EstadoCultivo })}
-              options={ESTADOS.map((estado) => ({ value: estado, label: estado }))}
-              required
-            />
-            <Input
-              label="Fecha inicio"
-              type="date"
-              value={formData.fechaInicio}
-              onChange={(e) => setFormData({ ...formData, fechaInicio: e.target.value })}
-              required
-            />
-            <Input
-              label="Fecha fin"
-              type="date"
-              value={formData.fechaFin}
-              onChange={(e) => setFormData({ ...formData, fechaFin: e.target.value })}
-            />
+              <Input
+                label="Fecha inicio"
+                type="date"
+                value={formData.fechaInicio}
+                onChange={(e) => setFormData({ ...formData, fechaInicio: e.target.value })}
+                required
+              />
+              <Input
+                label="Fecha fin"
+                type="date"
+                value={formData.fechaFin}
+                onChange={(e) => setFormData({ ...formData, fechaFin: e.target.value })}
+              />
+            </div>
           </div>
 
           <div className="mt-3">

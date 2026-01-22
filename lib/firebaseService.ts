@@ -221,6 +221,38 @@ export const macetasService = new FirebaseCollection<Maceta>(COLLECTIONS.MACETAS
 export const geneticasService = new FirebaseCollection<Genetica>(COLLECTIONS.GENETICAS);
 export const registrosCultivoService = new FirebaseCollection<RegistroCultivo>(COLLECTIONS.REGISTROS_CULTIVO);
 
+export const cultivosServiceExtended = {
+  ...cultivosService,
+
+  async createCultivoConCodigo(
+    cultivo: Omit<Cultivo, "id" | "codigoInterno">
+  ): Promise<Cultivo> {
+    return runTransaction(db, async (transaction) => {
+      const counterRef = doc(db, COLLECTIONS.SECUENCIAS, "cultivos");
+      const counterSnap = await transaction.get(counterRef);
+      const lastNumero = counterSnap.exists()
+        ? (counterSnap.data().numero as number) || 0
+        : 0;
+      const siguienteNumero = lastNumero + 1;
+      const codigoInterno = `C${String(siguienteNumero).padStart(4, "0")}`;
+
+      transaction.set(counterRef, { numero: siguienteNumero }, { merge: true });
+
+      const cultivoRef = doc(collection(db, COLLECTIONS.CULTIVOS));
+      transaction.set(
+        cultivoRef,
+        prepareForFirebase({ ...cultivo, codigoInterno })
+      );
+
+      return {
+        id: cultivoRef.id,
+        ...cultivo,
+        codigoInterno,
+      };
+    });
+  },
+};
+
 // ============================================================================
 // SERVICIOS ESPECIALIZADOS CON LÓGICA DE NEGOCIO
 // ============================================================================

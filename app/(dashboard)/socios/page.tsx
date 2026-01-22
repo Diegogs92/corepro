@@ -84,7 +84,6 @@ export default function SociosPage() {
     fechaRegistro: new Date().toISOString().split("T")[0],
     tipo: "SOCIO_REGULAR" as TipoSocio,
     activo: true,
-    limiteCredito: "0",
     notas: "",
   });
 
@@ -213,7 +212,6 @@ export default function SociosPage() {
         email: formData.email || undefined,
         fechaRegistro,
         tipo: formData.tipo,
-        limiteCredito: parseFloat(formData.limiteCredito) || 0,
         activo: formData.activo,
         notas: formData.notas || undefined,
       };
@@ -246,7 +244,6 @@ export default function SociosPage() {
       email: socio.email || "",
       fechaRegistro: socio.fechaRegistro.toISOString().split("T")[0],
       tipo: socio.tipo,
-      limiteCredito: socio.limiteCredito.toString(),
       activo: socio.activo,
       notas: socio.notas || "",
     });
@@ -307,7 +304,6 @@ export default function SociosPage() {
       email: "",
       fechaRegistro: new Date().toISOString().split("T")[0],
       tipo: "SOCIO_REGULAR" as TipoSocio,
-      limiteCredito: "0",
       activo: true,
       notas: "",
     });
@@ -890,19 +886,6 @@ export default function SociosPage() {
                 { value: "SOCIO_PREFERENCIAL", label: "Socio Preferencial" },
                 { value: "CLIENTE_OCASIONAL", label: "Cliente Ocasional" },
               ]}
-            />
-
-            {/* Límite de Crédito */}
-            <Input
-              label="Límite de Crédito"
-              type="number"
-              step="0.01"
-              min="0"
-              value={formData.limiteCredito}
-              onChange={(e) =>
-                setFormData({ ...formData, limiteCredito: e.target.value })
-              }
-              placeholder="0.00"
             />
 
             {/* Fecha de Registro */}
