@@ -264,15 +264,14 @@ export default function SociosPage() {
 
     setDeleting(true);
     try {
-      // Desactivar socio en lugar de eliminar
-      await sociosService.update(socioToDelete.id, { activo: false });
+      await sociosService.delete(socioToDelete.id);
       await loadData();
 
       setShowConfirmDelete(false);
       setSocioToDelete(null);
     } catch (error) {
-      console.error("Error desactivando socio:", error);
-      alert("Error al desactivar el socio.");
+      console.error("Error eliminando socio:", error);
+      alert("Error al eliminar el socio.");
     } finally {
       setDeleting(false);
     }
@@ -495,7 +494,7 @@ export default function SociosPage() {
                           {venta.estadoPago === "PAGADO" ? (
                             <Badge variant="success">Pagado</Badge>
                           ) : venta.estadoPago === "PARCIAL" ? (
-                            <Badge variant="warning">Parcial</Badge>
+                            <Badge variant="danger">Parcial</Badge>
                           ) : (
                             <Badge variant="danger">Pendiente</Badge>
                           )}
@@ -504,7 +503,7 @@ export default function SociosPage() {
                           {venta.entregado ? (
                             <Badge variant="success">Sí</Badge>
                           ) : (
-                            <Badge variant="warning">No</Badge>
+                            <Badge variant="danger">No</Badge>
                           )}
                         </TableCell>
                       </TableRow>
@@ -950,11 +949,11 @@ export default function SociosPage() {
           setSocioToDelete(null);
         }}
         onConfirm={confirmDelete}
-        title="Desactivar Socio"
-        message={`¿Estás seguro de desactivar al socio ${socioToDelete?.nombre} ${socioToDelete?.apellido || ""}? El socio quedará inactivo pero sus datos se conservarán.`}
-        confirmText="Desactivar"
+        title="Eliminar Socio"
+        message={`Estas seguro de eliminar al socio ${socioToDelete?.nombre} ${socioToDelete?.apellido || ""}? Esta accion no se puede deshacer.`}
+        confirmText="Eliminar"
         cancelText="Cancelar"
-        variant="warning"
+        variant="danger"
         loading={deleting}
       />
     </div>

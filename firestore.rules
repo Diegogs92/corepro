@@ -34,8 +34,7 @@ service cloud.firestore {
     // SOCIOS - Lectura y escritura para autenticados
     match /socios/{socioId} {
       allow read: if isAuthenticated();
-      allow create, update: if isAuthenticated();
-      allow delete: if false; // Solo marcar como inactivo
+      allow create, update, delete: if isAuthenticated();
     }
 
     // EMPLEADOS - Solo lectura para autenticados
