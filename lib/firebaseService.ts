@@ -37,6 +37,11 @@ import type {
   MovimientoStock,
   Cosecha,
   MovimientoCaja,
+  Cultivo,
+  Cama,
+  Maceta,
+  Genetica,
+  RegistroCultivo,
 } from './types';
 
 // ============================================================================
@@ -60,6 +65,11 @@ export const COLLECTIONS = {
   COSECHAS: 'cosechas',
   MOVIMIENTOS_CAJA: 'movimientosCaja',
   SECUENCIAS: 'secuencias',
+  CULTIVOS: 'cultivos',
+  CAMAS: 'camas',
+  MACETAS: 'macetas',
+  GENETICAS: 'geneticas',
+  REGISTROS_CULTIVO: 'registrosCultivo',
 } as const;
 
 // ============================================================================
@@ -205,6 +215,11 @@ export const pagosSueldosService = new FirebaseCollection<PagoSueldo>(COLLECTION
 export const movimientosStockService = new FirebaseCollection<MovimientoStock>(COLLECTIONS.MOVIMIENTOS_STOCK);
 export const cosechasService = new FirebaseCollection<Cosecha>(COLLECTIONS.COSECHAS);
 export const movimientosCajaService = new FirebaseCollection<MovimientoCaja>(COLLECTIONS.MOVIMIENTOS_CAJA);
+export const cultivosService = new FirebaseCollection<Cultivo>(COLLECTIONS.CULTIVOS);
+export const camasService = new FirebaseCollection<Cama>(COLLECTIONS.CAMAS);
+export const macetasService = new FirebaseCollection<Maceta>(COLLECTIONS.MACETAS);
+export const geneticasService = new FirebaseCollection<Genetica>(COLLECTIONS.GENETICAS);
+export const registrosCultivoService = new FirebaseCollection<RegistroCultivo>(COLLECTIONS.REGISTROS_CULTIVO);
 
 // ============================================================================
 // SERVICIOS ESPECIALIZADOS CON LÓGICA DE NEGOCIO

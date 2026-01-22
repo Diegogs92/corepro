@@ -136,6 +136,41 @@ service cloud.firestore {
       allow update, delete: if false; // No modificar historial
     }
 
+    // CULTIVOS - Lectura y escritura para autenticados
+    match /cultivos/{cultivoId} {
+      allow read: if isAuthenticated();
+      allow create, update: if isAuthenticated();
+      allow delete: if false; // Soft delete
+    }
+
+    // CAMAS - Lectura y escritura para autenticados
+    match /camas/{camaId} {
+      allow read: if isAuthenticated();
+      allow create, update: if isAuthenticated();
+      allow delete: if false;
+    }
+
+    // MACETAS - Lectura y escritura para autenticados
+    match /macetas/{macetaId} {
+      allow read: if isAuthenticated();
+      allow create, update: if isAuthenticated();
+      allow delete: if false;
+    }
+
+    // GENETICAS - Lectura y escritura para autenticados
+    match /geneticas/{geneticaId} {
+      allow read: if isAuthenticated();
+      allow create, update: if isAuthenticated();
+      allow delete: if false;
+    }
+
+    // REGISTROS DE CULTIVO - Lectura para autenticados
+    match /registrosCultivo/{registroId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow update, delete: if false;
+    }
+
     // SECUENCIAS - Contadores internos
     match /secuencias/{secuenciaId} {
       allow read, write: if isAuthenticated();

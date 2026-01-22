@@ -316,7 +316,85 @@ export interface Cosecha {
 }
 
 // ----------------------------------------------------------------------------
-// 9. REPORTES Y VISTAS
+// 9. CULTIVOS
+// ----------------------------------------------------------------------------
+
+export type TipoUbicacionCultivo = 'CAMA' | 'MACETA';
+export type EtapaCultivo =
+  | 'GERMINACION'
+  | 'PLANTULA'
+  | 'VEGETATIVO'
+  | 'FLORACION'
+  | 'COSECHA'
+  | 'SECADO_CURADO';
+export type EstadoCultivo = 'ACTIVO' | 'PAUSADO' | 'FINALIZADO';
+
+export interface Cultivo {
+  id: string;
+  nombre: string;
+  codigoInterno?: string;
+  tipoUbicacion: TipoUbicacionCultivo;
+  camaId?: string | null;
+  macetaId?: string | null;
+  geneticaId?: string | null;
+  etapaActual: EtapaCultivo;
+  estado: EstadoCultivo;
+  fechaInicio: Date;
+  fechaFin?: Date | null;
+  notas?: string;
+  createdAt: Date;
+  updatedAt: Date;
+  deletedAt?: Date | null;
+  createdBy?: string;
+  updatedBy?: string;
+}
+
+export interface Cama {
+  id: string;
+  nombre: string;
+  ubicacion?: string;
+  capacidad?: number;
+  notas?: string;
+}
+
+export interface Maceta {
+  id: string;
+  nombre: string;
+  volumenLitros?: number;
+  ubicacion?: string;
+  notas?: string;
+}
+
+export type TipoGenetica = 'FEMINIZADA' | 'AUTO' | 'REGULAR' | 'CLON';
+
+export interface Genetica {
+  id: string;
+  nombre: string;
+  origen?: string;
+  tipo?: TipoGenetica;
+  notas?: string;
+}
+
+export type TipoRegistroCultivo =
+  | 'ETAPA'
+  | 'LUZ_AMBIENTE'
+  | 'RIEGO_NUTRICION'
+  | 'SANIDAD'
+  | 'GENERAL';
+
+export interface RegistroCultivo {
+  id: string;
+  cultivoId: string;
+  tipo: TipoRegistroCultivo;
+  fecha: Date;
+  payload: any;
+  notas?: string;
+  createdAt: Date;
+  createdBy?: string;
+}
+
+// ----------------------------------------------------------------------------
+// 10. REPORTES Y VISTAS
 // ----------------------------------------------------------------------------
 
 export interface BalanceGeneral {

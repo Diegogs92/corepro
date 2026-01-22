@@ -348,6 +348,94 @@ Cosecha {
 
 ---
 
+### 1.16 CULTIVOS
+```typescript
+Cultivo {
+  id: string
+  nombre: string
+  codigoInterno?: string
+  tipoUbicacion: 'CAMA' | 'MACETA'
+  camaId?: string | null
+  macetaId?: string | null
+  geneticaId?: string | null
+  etapaActual: 'GERMINACION' | 'PLANTULA' | 'VEGETATIVO' | 'FLORACION' | 'COSECHA' | 'SECADO_CURADO'
+  estado: 'ACTIVO' | 'PAUSADO' | 'FINALIZADO'
+  fechaInicio: Date
+  fechaFin?: Date | null
+  notas?: string
+  createdAt: Date
+  updatedAt: Date
+  deletedAt?: Date | null
+  createdBy?: string
+  updatedBy?: string
+}
+```
+
+**Relaciones:**
+- Pertenece opcionalmente a una `Cama`, `Maceta` y `Genetica`
+- Tiene muchos `RegistrosCultivo`
+
+---
+
+### 1.17 CAMAS
+```typescript
+Cama {
+  id: string
+  nombre: string
+  ubicacion?: string
+  capacidad?: number
+  notas?: string
+}
+```
+
+---
+
+### 1.18 MACETAS
+```typescript
+Maceta {
+  id: string
+  nombre: string
+  volumenLitros?: number
+  ubicacion?: string
+  notas?: string
+}
+```
+
+---
+
+### 1.19 GENETICAS
+```typescript
+Genetica {
+  id: string
+  nombre: string
+  origen?: string
+  tipo?: 'FEMINIZADA' | 'AUTO' | 'REGULAR' | 'CLON'
+  notas?: string
+}
+```
+
+---
+
+### 1.20 REGISTROS DE CULTIVO
+```typescript
+RegistroCultivo {
+  id: string
+  cultivoId: string
+  tipo: 'ETAPA' | 'LUZ_AMBIENTE' | 'RIEGO_NUTRICION' | 'SANIDAD' | 'GENERAL'
+  fecha: Date
+  payload: any
+  notas?: string
+  createdAt: Date
+  createdBy?: string
+}
+```
+
+**Relaciones:**
+- Pertenece a un `Cultivo`
+
+---
+
+
 ## 2. VISTAS / REPORTES CALCULADOS
 
 ### 2.1 Balance General
@@ -416,6 +504,13 @@ ReporteStock {
 **HOJA "GASTOS FIJOS":**
 - → Tabla `CategoriaGasto` (tipo=FIJO)
 - → Tabla `Gastos` (marcados como recurrentes)
+
+---
+
+### Cultivos (migracion manual)
+- Crear colecciones `camas`, `macetas`, `geneticas`
+- Cargar `cultivos` con sus referencias y auditoria (createdAt/updatedAt)
+- Cargar `registrosCultivo` por historial si existe
 
 ---
 

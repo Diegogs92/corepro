@@ -15,6 +15,7 @@ import {
   LogOut,
   Moon,
   Sun,
+  Leaf,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -44,6 +45,11 @@ const menuItems = [
     name: "Stock",
     href: "/stock",
     icon: Boxes,
+  },
+  {
+    name: "Cultivos",
+    href: "/cultivos",
+    icon: Leaf,
   },
   {
     name: "Gastos",
