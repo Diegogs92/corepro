@@ -60,7 +60,7 @@ export interface Socio {
   tipo: TipoSocio;
   activo: boolean;
   saldo: number; // Cuenta corriente (+ a favor del socio, - debe)
-  limiteCredito: number;
+  limiteCredito?: number;
   notas?: string;
 }
 
