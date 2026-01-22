@@ -26,22 +26,22 @@ import {
   BarChart3,
 } from "lucide-react";
 import { formatCurrency, formatDate, getStockStatus } from "@/lib/utils";
-import type { Venta, Gasto, Producto, Socio } from "@/lib/types";
+import type { Venta, Gasto, Producto, Socio, Inversor } from "@/lib/types";
 import { startOfMonth, endOfMonth, startOfYear } from "date-fns";
 import {
-  mockVentas,
-  mockGastosFijos,
-  mockProductos,
-  mockSocios,
-  mockInversores,
-} from "@/lib/mockData";
+  ventasService,
+  gastosService,
+  productosService,
+  sociosService,
+  inversoresService,
+} from "@/lib/firebaseService";
 
 interface DashboardStats {
   // Financiero
   ingresosMes: number;
   gastosM: number;
   saldoNeto: number;
-  ingresosAño: number;
+  ingresosAnio: number;
 
   // Socios
   totalSocios: number;
@@ -64,7 +64,7 @@ export default function DashboardPage() {
     ingresosMes: 0,
     gastosM: 0,
     saldoNeto: 0,
-    ingresosAño: 0,
+    ingresosAnio: 0,
     totalSocios: 0,
     sociosActivos: 0,
     deudaTotal: 0,
@@ -82,6 +82,7 @@ export default function DashboardPage() {
   >([]);
   const [ultimasVentas, setUltimasVentas] = useState<Venta[]>([]);
   const [gastosRecientes, setGastosRecientes] = useState<Gasto[]>([]);
+  const [inversores, setInversores] = useState<Inversor[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -95,24 +96,32 @@ export default function DashboardPage() {
       const monthEnd = endOfMonth(now);
       const yearStart = startOfYear(now);
 
+      const [ventas, gastos, productos, socios, inversoresData] = await Promise.all([
+        ventasService.getAll(),
+        gastosService.getAll(),
+        productosService.getAll(),
+        sociosService.getAll(),
+        inversoresService.getAll(),
+      ]);
+
       // ======================================================================
       // VENTAS
       // ======================================================================
-      const ventas = mockVentas;
-      const ventasMes = ventas.filter(
+      const ventasConFecha = ventas.filter((v) => v.fecha);
+      const ventasMes = ventasConFecha.filter(
         (v) => v.fecha >= monthStart && v.fecha <= monthEnd
       );
-      const ventasAño = ventas.filter((v) => v.fecha >= yearStart);
+      const ventasAnio = ventasConFecha.filter((v) => v.fecha >= yearStart);
 
       const ingresosMes = ventasMes.reduce((sum, v) => sum + v.total, 0);
-      const ingresosAño = ventasAño.reduce((sum, v) => sum + v.total, 0);
+      const ingresosAnio = ventasAnio.reduce((sum, v) => sum + v.total, 0);
       const promedioVenta = ventasMes.length > 0 ? ingresosMes / ventasMes.length : 0;
 
       // ======================================================================
       // GASTOS
       // ======================================================================
-      const gastos = mockGastosFijos;
-      const gastosMes = gastos.filter(
+      const gastosConFecha = gastos.filter((g) => g.fecha);
+      const gastosMes = gastosConFecha.filter(
         (g) => g.fecha >= monthStart && g.fecha <= monthEnd
       );
       const gastosMesTotales = gastosMes.reduce((sum, g) => sum + g.monto, 0);
@@ -120,7 +129,6 @@ export default function DashboardPage() {
       // ======================================================================
       // PRODUCTOS
       // ======================================================================
-      const productos = mockProductos;
       const productosStockBajo = productos.filter(
         (p) => getStockStatus(p.stockActual, p.stockMinimo) === "bajo"
       );
@@ -135,7 +143,6 @@ export default function DashboardPage() {
       // ======================================================================
       // SOCIOS
       // ======================================================================
-      const socios = mockSocios;
       const sociosActivos = socios.filter((s) => s.activo);
       const deudaTotal = socios
         .filter((s) => s.saldo < 0)
@@ -164,7 +171,7 @@ export default function DashboardPage() {
         ingresosMes,
         gastosM: gastosMesTotales,
         saldoNeto: ingresosMes - gastosMesTotales,
-        ingresosAño,
+        ingresosAnio: ingresosAnio,
         totalSocios: socios.length,
         sociosActivos: sociosActivos.length,
         deudaTotal,
@@ -178,13 +185,20 @@ export default function DashboardPage() {
 
       setProductosStockBajo([...productosStockBajo, ...productosStockCritico].slice(0, 5));
       setTopSocios(topSociosData);
-      setUltimasVentas(ventas.slice(0, 5));
-      setGastosRecientes(gastos.slice(0, 5));
+      setUltimasVentas(
+        [...ventasConFecha].sort((a, b) => b.fecha.getTime() - a.fecha.getTime()).slice(0, 5)
+      );
+      setGastosRecientes(
+        [...gastosConFecha].sort((a, b) => b.fecha.getTime() - a.fecha.getTime()).slice(0, 5)
+      );
+      setInversores(inversoresData);
     } catch (error) {
       console.error("Error cargando datos del dashboard:", error);
     } finally {
       setLoading(false);
     }
+  };
+
   };
 
   if (loading) {
@@ -568,27 +582,33 @@ export default function DashboardPage() {
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {mockInversores.map((inversor) => (
-                  <div
-                    key={inversor.id}
-                    className="flex items-start justify-between p-4 rounded-lg bg-slate-50 dark:bg-slate-800/50"
-                  >
-                    <div>
-                      <p className="font-semibold text-slate-900 dark:text-slate-100">
-                        {inversor.nombre}
-                      </p>
-                      <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
-                        Participación: {inversor.porcentajeParticipacion}%
-                      </p>
-                      <p className="text-sm text-slate-600 dark:text-slate-400">
-                        Invertido USD: {formatCurrency(inversor.montoInvertidoUSD)}
-                      </p>
-                    </div>
-                    <Badge variant={inversor.activo ? "success" : "default"}>
-                      {inversor.activo ? "Activo" : "Inactivo"}
-                    </Badge>
+                {inversores.length === 0 ? (
+                  <div className="col-span-full text-center py-8 text-slate-500 dark:text-slate-400">
+                    No hay inversores registrados
                   </div>
-                ))}
+                ) : (
+                  inversores.map((inversor) => (
+                    <div
+                      key={inversor.id}
+                      className="flex items-start justify-between p-4 rounded-lg bg-slate-50 dark:bg-slate-800/50"
+                    >
+                      <div>
+                        <p className="font-semibold text-slate-900 dark:text-slate-100">
+                          {inversor.nombre}
+                        </p>
+                        <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
+                          Participacion: {inversor.porcentajeParticipacion}%
+                        </p>
+                        <p className="text-sm text-slate-600 dark:text-slate-400">
+                          Invertido USD: {formatCurrency(inversor.montoInvertidoUSD)}
+                        </p>
+                      </div>
+                      <Badge variant={inversor.activo ? "success" : "default"}>
+                        {inversor.activo ? "Activo" : "Inactivo"}
+                      </Badge>
+                    </div>
+                  ))
+                )}
               </div>
             </CardContent>
           </Card>
