@@ -354,12 +354,16 @@ export interface Cama {
   nombre: string;
   ubicacion?: string;
   capacidad?: number;
+  anchoCm?: number;
+  largoCm?: number;
+  altoCm?: number;
   notas?: string;
 }
 
 export interface Maceta {
   id: string;
   nombre: string;
+  camaId?: string | null;
   volumenLitros?: number;
   ubicacion?: string;
   notas?: string;

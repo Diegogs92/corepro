@@ -95,6 +95,24 @@ export default function CultivosPage() {
     | { type: "cultivo"; cultivoId: string }
     | null
   >(null);
+  const [showCamaForm, setShowCamaForm] = useState(false);
+  const [showMacetaForm, setShowMacetaForm] = useState(false);
+  const [camaForm, setCamaForm] = useState({
+    nombre: "",
+    ubicacion: "",
+    capacidad: "",
+    anchoCm: "",
+    largoCm: "",
+    altoCm: "",
+    notas: "",
+  });
+  const [macetaForm, setMacetaForm] = useState({
+    nombre: "",
+    camaId: "",
+    volumenLitros: "",
+    ubicacion: "",
+    notas: "",
+  });
 
   const [filters, setFilters] = useState({
     search: "",
@@ -108,7 +126,6 @@ export default function CultivosPage() {
 
   const [formData, setFormData] = useState({
     nombre: "",
-    codigoInterno: "",
     tipoUbicacion: "CAMA" as TipoUbicacionCultivo,
     camaId: "",
     macetaId: "",
@@ -192,7 +209,6 @@ export default function CultivosPage() {
   const resetForm = () => {
     setFormData({
       nombre: "",
-      codigoInterno: "",
       tipoUbicacion: "CAMA",
       camaId: "",
       macetaId: "",
@@ -353,10 +369,10 @@ export default function CultivosPage() {
       const fechaInicio = new Date(formData.fechaInicio + "T00:00:00");
       const fechaFin = formData.fechaFin ? new Date(formData.fechaFin + "T00:00:00") : null;
 
-      const codigoInterno = editingId ? formData.codigoInterno.trim() || undefined : undefined;
+      const previo = editingId ? cultivos.find((cultivo) => cultivo.id === editingId) : undefined;
       const payload: Omit<Cultivo, "id"> = {
         nombre: formData.nombre.trim(),
-        codigoInterno,
+        codigoInterno: previo?.codigoInterno,
         tipoUbicacion: formData.tipoUbicacion,
         camaId: formData.tipoUbicacion === "CAMA" ? formData.camaId : null,
         macetaId: formData.tipoUbicacion === "MACETA" ? formData.macetaId : null,
@@ -374,7 +390,6 @@ export default function CultivosPage() {
       };
 
       if (editingId) {
-        const previo = cultivos.find((cultivo) => cultivo.id === editingId);
         await cultivosService.update(editingId, {
           ...payload,
           createdAt: previo?.createdAt || now,
@@ -437,7 +452,6 @@ export default function CultivosPage() {
   const handleEdit = (cultivo: CultivoConRelaciones) => {
     setFormData({
       nombre: cultivo.nombre,
-      codigoInterno: cultivo.codigoInterno || "",
       tipoUbicacion: cultivo.tipoUbicacion,
       camaId: cultivo.camaId || "",
       macetaId: cultivo.macetaId || "",
@@ -585,6 +599,86 @@ export default function CultivosPage() {
     setRegistroForm((prev) => ({ ...prev, etapa: cultivo.etapaActual }));
     setShowDetalle(true);
     await loadRegistros(cultivo.id);
+  };
+
+  const resetCamaForm = () => {
+    setCamaForm({
+      nombre: "",
+      ubicacion: "",
+      capacidad: "",
+      anchoCm: "",
+      largoCm: "",
+      altoCm: "",
+      notas: "",
+    });
+  };
+
+  const resetMacetaForm = () => {
+    setMacetaForm({
+      nombre: "",
+      camaId: "",
+      volumenLitros: "",
+      ubicacion: "",
+      notas: "",
+    });
+  };
+
+  const handleCrearCama = async () => {
+    setSaving(true);
+    try {
+      if (!camaForm.nombre.trim()) {
+        alert("El nombre de la cama es obligatorio.");
+        return;
+      }
+      await camasService.create({
+        nombre: camaForm.nombre.trim(),
+        ubicacion: camaForm.ubicacion.trim() || undefined,
+        capacidad: camaForm.capacidad ? parseInt(camaForm.capacidad, 10) : undefined,
+        anchoCm: camaForm.anchoCm ? parseFloat(camaForm.anchoCm) : undefined,
+        largoCm: camaForm.largoCm ? parseFloat(camaForm.largoCm) : undefined,
+        altoCm: camaForm.altoCm ? parseFloat(camaForm.altoCm) : undefined,
+        notas: camaForm.notas.trim() || undefined,
+      });
+      await loadData();
+      setShowCamaForm(false);
+      resetCamaForm();
+    } catch (error) {
+      console.error("Error creando cama:", error);
+      alert("Error al crear la cama.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleCrearMaceta = async () => {
+    setSaving(true);
+    try {
+      if (!macetaForm.nombre.trim()) {
+        alert("El nombre de la maceta es obligatorio.");
+        return;
+      }
+      if (!macetaForm.camaId) {
+        alert("Debe seleccionar una cama.");
+        return;
+      }
+      await macetasService.create({
+        nombre: macetaForm.nombre.trim(),
+        camaId: macetaForm.camaId,
+        volumenLitros: macetaForm.volumenLitros
+          ? parseFloat(macetaForm.volumenLitros)
+          : undefined,
+        ubicacion: macetaForm.ubicacion.trim() || undefined,
+        notas: macetaForm.notas.trim() || undefined,
+      });
+      await loadData();
+      setShowMacetaForm(false);
+      resetMacetaForm();
+    } catch (error) {
+      console.error("Error creando maceta:", error);
+      alert("Error al crear la maceta.");
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleAgregarRegistro = async () => {
@@ -805,6 +899,9 @@ export default function CultivosPage() {
                         (cultivo) => cultivo.macetaId === maceta.id && !cultivo.deletedAt
                       );
                       const ocupada = macetasOcupadas.has(maceta.id);
+                      const camaNombre = maceta.camaId
+                        ? camas.find((cama) => cama.id === maceta.camaId)?.nombre
+                        : null;
                       return (
                         <div
                           key={maceta.id}
@@ -823,6 +920,9 @@ export default function CultivosPage() {
                           }`}
                         >
                           <p className="text-sm font-semibold text-slate-800">{maceta.nombre}</p>
+                          {camaNombre && (
+                            <p className="text-[10px] text-slate-400">Cama: {camaNombre}</p>
+                          )}
                           {cultivoMaceta ? (
                             <span
                               draggable
@@ -854,16 +954,24 @@ export default function CultivosPage() {
           <CardHeader>
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <CardTitle>Listado de Cultivos</CardTitle>
-              <Button
-                size="sm"
-                onClick={() => {
-                  resetForm();
-                  setShowForm(true);
-                }}
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Nuevo cultivo
-              </Button>
+              <div className="flex flex-wrap gap-2">
+                <Button size="sm" variant="secondary" onClick={() => setShowCamaForm(true)}>
+                  Crear cama
+                </Button>
+                <Button size="sm" variant="secondary" onClick={() => setShowMacetaForm(true)}>
+                  Crear maceta
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={() => {
+                    resetForm();
+                    setShowForm(true);
+                  }}
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Nuevo cultivo
+                </Button>
+              </div>
             </div>
           </CardHeader>
           <CardContent>
@@ -1026,24 +1134,13 @@ export default function CultivosPage() {
         size="xl"
       >
         <form onSubmit={handleSubmit}>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 gap-3">
             <Input
               label="Nombre"
               value={formData.nombre}
               onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
               required
             />
-            <div>
-              <Input
-                label="Codigo interno"
-                value={formData.codigoInterno}
-                placeholder="Se asigna al guardar"
-                disabled
-              />
-              <p className="mt-1 text-xs text-slate-500">
-                Se genera automaticamente y es consecutivo.
-              </p>
-            </div>
           </div>
 
           <div className="mt-4 space-y-4">
@@ -1253,6 +1350,148 @@ export default function CultivosPage() {
             </Button>
           </div>
         </form>
+      </Modal>
+
+      <Modal
+        isOpen={showCamaForm}
+        onClose={() => {
+          setShowCamaForm(false);
+          resetCamaForm();
+        }}
+        title="Nueva cama"
+        size="lg"
+      >
+        <div className="space-y-4">
+          <Input
+            label="Nombre"
+            value={camaForm.nombre}
+            onChange={(e) => setCamaForm({ ...camaForm, nombre: e.target.value })}
+            required
+          />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <Input
+              label="Ancho (cm)"
+              type="number"
+              value={camaForm.anchoCm}
+              onChange={(e) => setCamaForm({ ...camaForm, anchoCm: e.target.value })}
+            />
+            <Input
+              label="Largo (cm)"
+              type="number"
+              value={camaForm.largoCm}
+              onChange={(e) => setCamaForm({ ...camaForm, largoCm: e.target.value })}
+            />
+            <Input
+              label="Alto (cm)"
+              type="number"
+              value={camaForm.altoCm}
+              onChange={(e) => setCamaForm({ ...camaForm, altoCm: e.target.value })}
+            />
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <Input
+              label="Ubicacion"
+              value={camaForm.ubicacion}
+              onChange={(e) => setCamaForm({ ...camaForm, ubicacion: e.target.value })}
+            />
+            <Input
+              label="Capacidad"
+              type="number"
+              value={camaForm.capacidad}
+              onChange={(e) => setCamaForm({ ...camaForm, capacidad: e.target.value })}
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">Notas</label>
+            <textarea
+              className="w-full rounded-md border border-slate-300 bg-white px-3 py-2"
+              rows={3}
+              value={camaForm.notas}
+              onChange={(e) => setCamaForm({ ...camaForm, notas: e.target.value })}
+            />
+          </div>
+          <div className="flex flex-col sm:flex-row gap-2">
+            <Button onClick={handleCrearCama} disabled={saving}>
+              {saving ? "Guardando..." : "Crear cama"}
+            </Button>
+            <Button
+              variant="secondary"
+              onClick={() => {
+                setShowCamaForm(false);
+                resetCamaForm();
+              }}
+            >
+              Cancelar
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      <Modal
+        isOpen={showMacetaForm}
+        onClose={() => {
+          setShowMacetaForm(false);
+          resetMacetaForm();
+        }}
+        title="Nueva maceta"
+        size="lg"
+      >
+        <div className="space-y-4">
+          <Input
+            label="Nombre"
+            value={macetaForm.nombre}
+            onChange={(e) => setMacetaForm({ ...macetaForm, nombre: e.target.value })}
+            required
+          />
+          <Select
+            label="Cama"
+            value={macetaForm.camaId}
+            onChange={(e) => setMacetaForm({ ...macetaForm, camaId: e.target.value })}
+            options={[
+              { value: "", label: "Seleccionar cama" },
+              ...camas.map((cama) => ({ value: cama.id, label: cama.nombre })),
+            ]}
+            required
+          />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <Input
+              label="Volumen (L)"
+              type="number"
+              value={macetaForm.volumenLitros}
+              onChange={(e) =>
+                setMacetaForm({ ...macetaForm, volumenLitros: e.target.value })
+              }
+            />
+            <Input
+              label="Ubicacion"
+              value={macetaForm.ubicacion}
+              onChange={(e) => setMacetaForm({ ...macetaForm, ubicacion: e.target.value })}
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">Notas</label>
+            <textarea
+              className="w-full rounded-md border border-slate-300 bg-white px-3 py-2"
+              rows={3}
+              value={macetaForm.notas}
+              onChange={(e) => setMacetaForm({ ...macetaForm, notas: e.target.value })}
+            />
+          </div>
+          <div className="flex flex-col sm:flex-row gap-2">
+            <Button onClick={handleCrearMaceta} disabled={saving || camas.length === 0}>
+              {saving ? "Guardando..." : "Crear maceta"}
+            </Button>
+            <Button
+              variant="secondary"
+              onClick={() => {
+                setShowMacetaForm(false);
+                resetMacetaForm();
+              }}
+            >
+              Cancelar
+            </Button>
+          </div>
+        </div>
       </Modal>
 
       <Modal
