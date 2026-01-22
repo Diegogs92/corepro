@@ -227,7 +227,7 @@ export default function StockPage() {
 
     setDeleting(true);
     try {
-      await productosService.update(productoToDelete.id, { activo: false });
+      await productosService.delete(productoToDelete.id);
       await loadData();
       setShowConfirmDelete(false);
       setProductoToDelete(null);
@@ -673,9 +673,9 @@ export default function StockPage() {
           setProductoToDelete(null);
         }}
         onConfirm={confirmDelete}
-        title="Desactivar Producto"
-        message={`¿Estás seguro de desactivar el producto "${productoToDelete?.nombre}"? El producto no se eliminará, solo se marcará como inactivo.`}
-        confirmText="Desactivar"
+        title="Eliminar Producto"
+        message={`¿Estás seguro de eliminar el producto "${productoToDelete?.nombre}"? El producto no se eliminará, solo se marcará como inactivo.`}
+        confirmText="Eliminar"
         cancelText="Cancelar"
         variant="warning"
         loading={deleting}
