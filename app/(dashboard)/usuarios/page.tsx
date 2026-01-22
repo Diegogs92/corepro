@@ -486,7 +486,7 @@ export default function UsuariosPage() {
                             {usuario.nombre} {usuario.apellido}
                           </p>
                           <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                            @{usuario.username}
+                            {usuario.username}
                           </p>
                         </div>
                       </TableCell>
