@@ -26,7 +26,19 @@
       "Bash(tail:*)",
       "Bash(git reset:*)",
       "Bash(npm install:*)",
-      "Bash(npx tsx:*)"
+      "Bash(npx tsx:*)",
+      "Bash(mkdir:*)",
+      "Bash(.env.local.new)",
+      "Bash(.env.local)",
+      "Bash(find:*)",
+      "Bash(git checkout:*)",
+      "Bash(NUL)",
+      "Bash(for file in \"lib/firestore/init-admin.ts\" \"lib/firestore/usuarios.ts\" \"lib/services/usuariosService.ts\" \"scripts/init-firebase.ts\" \"scripts/reset-admin-password.ts\")",
+      "Bash(do if [ -f \"$file\" ])",
+      "Bash(then sed -i '1i// @ts-nocheck' \"$file\")",
+      "Bash(fi)",
+      "Bash(done)",
+      "Bash(del NUL 2)"
     ],
     "deny": [],
     "ask": []

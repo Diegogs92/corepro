@@ -41,7 +41,7 @@ import {
   productosServiceExtended,
   movimientosStockService,
   productosService,
-} from "@/lib/firebaseService";
+} from "@/lib/supabaseService";
 
 // Tipo extendido para incluir categoría
 interface ProductoConCategoria extends Producto {

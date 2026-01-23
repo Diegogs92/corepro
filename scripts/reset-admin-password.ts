@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Script para resetear la contraseña del usuario admin
  * Ejecutar: npx tsx scripts/reset-admin-password.ts

@@ -1,0 +1,5 @@
+Línea 197-200 debe ser:
+      const data = await registrosCultivoService.query({ cultivoId });
+
+Línea 342-345 debe ser:
+        const active = await cultivosService.query({ macetaId, estado: "ACTIVO" });

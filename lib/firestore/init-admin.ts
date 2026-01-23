@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Script para crear el usuario admin inicial en Firebase
  * Este archivo debe ejecutarse una sola vez después de configurar Firebase

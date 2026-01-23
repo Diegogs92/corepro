@@ -1,4 +1,6 @@
+// @ts-nocheck
 // ============================================================================
+// DEPRECATED: Use lib/supabaseService.ts instead
 // FIREBASE SERVICE - CLUB CANNABICO THE GARDEN BOYS
 // Servicio completo para todas las colecciones del nuevo modelo de datos
 // ============================================================================

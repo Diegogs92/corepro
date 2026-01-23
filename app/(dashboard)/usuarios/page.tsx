@@ -34,7 +34,7 @@ import {
 } from "lucide-react";
 import { formatDate, formatUsername } from "@/lib/utils";
 import type { Usuario, RolUsuario } from "@/lib/types";
-import { getUsuarios, createUsuario, updateUsuario, deleteUsuario } from "@/lib/firestore/usuarios";
+import { usuariosService } from "@/lib/supabaseService";
 
 export default function UsuariosPage() {
   // ============================================================================
@@ -96,7 +96,7 @@ export default function UsuariosPage() {
   const loadUsuarios = async () => {
     setLoading(true);
     try {
-      const usuariosFromFirestore = await getUsuarios();
+      const usuariosFromFirestore = await usuariosService.getAll();
       setUsuarios(usuariosFromFirestore);
     } catch (error) {
       console.error("Error al cargar usuarios:", error);
@@ -173,8 +173,8 @@ export default function UsuariosPage() {
 
     try {
       if (editingId) {
-        // Actualizar usuario existente en Firestore
-        await updateUsuario(editingId, {
+        // Actualizar usuario existente en Supabase
+        await usuariosService.update(editingId, {
           username: formData.username,
           nombre: formData.nombre,
           apellido: formData.apellido || undefined,
@@ -202,14 +202,14 @@ export default function UsuariosPage() {
             : u
         ));
       } else {
-        // Crear nuevo usuario en Firestore
+        // Crear nuevo usuario en Supabase
         if (!formData.password) {
           alert("La contraseña es requerida para crear un nuevo usuario");
           setSaving(false);
           return;
         }
 
-        const nuevoUsuario = await createUsuario({
+        const nuevoUsuario = await usuariosService.create({
           username: formData.username,
           password: formData.password,
           nombre: formData.nombre,
@@ -260,8 +260,8 @@ export default function UsuariosPage() {
 
     setDeleting(true);
     try {
-      // Eliminar usuario en Firestore (marca como inactivo)
-      await deleteUsuario(usuarioToDelete.id);
+      // Eliminar usuario en Supabase (marca como inactivo)
+      await usuariosService.delete(usuarioToDelete.id);
 
       // Actualizar estado local
       setUsuarios(usuarios.map(u =>

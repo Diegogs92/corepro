@@ -37,7 +37,7 @@ import { formatCurrency, formatDate } from "@/lib/utils";
 import type { Gasto, CategoriaGasto, FrecuenciaGasto, MetodoPago } from "@/lib/types";
 import { startOfMonth, endOfMonth, isAfter, isBefore } from "date-fns";
 import { mockCategoriasGastos } from "@/lib/mockData";
-import { categoriasGastosService, gastosService } from "@/lib/firebaseService";
+import { categoriasGastosService, gastosService } from "@/lib/supabaseService";
 
 // Tipo extendido para incluir categoría
 interface GastoConCategoria extends Gasto {

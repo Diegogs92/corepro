@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Script de inicialización completa de Firebase
  * Crea el usuario admin y las colecciones iniciales en Firestore

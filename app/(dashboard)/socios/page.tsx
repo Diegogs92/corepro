@@ -34,7 +34,7 @@ import {
 } from "lucide-react";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import type { Socio, Venta, TipoSocio } from "@/lib/types";
-import { sociosService, ventasService } from "@/lib/firebaseService";
+import { sociosService, ventasService } from "@/lib/supabaseService";
 
 // Tipo extendido para incluir estadísticas
 interface SocioConStats extends Socio {

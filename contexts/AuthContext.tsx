@@ -38,13 +38,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
 
   useEffect(() => {
+    if (!auth || !db) return
     // Escuchar cambios en el estado de autenticación
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
         const normalizeUsername = (value: string | null) => formatUsername(value || "");
         // Usuario autenticado - obtener datos adicionales de Firestore
         try {
-          const userDoc = await getDoc(doc(db, "usuarios", firebaseUser.uid));
+          const userDoc = await getDoc(doc(db!, "usuarios", firebaseUser.uid));
           if (userDoc.exists()) {
             const userData = userDoc.data();
             const username = normalizeUsername(userData.username || firebaseUser.email);
@@ -57,7 +58,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             // Si no existe documento en Firestore, usar datos de Firebase Auth
             const username = normalizeUsername(firebaseUser.email);
             try {
-              await setDoc(doc(db, "usuarios", firebaseUser.uid), {
+              await setDoc(doc(db!, "usuarios", firebaseUser.uid), {
                 username: username,
                 nombre: username,
                 apellido: null,
@@ -99,6 +100,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const signIn = async (username: string, password: string) => {
+    if (!auth) throw new Error('Firebase not initialized')
     try {
       // Convertir username a email virtual para Firebase Auth
       const virtualEmail = `${username}@thegardenboys.local`;
@@ -119,6 +121,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signOut = async () => {
+    if (!auth) throw new Error('Firebase not initialized')
     try {
       await firebaseSignOut(auth);
       setUser(null);

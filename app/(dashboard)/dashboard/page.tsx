@@ -34,7 +34,7 @@ import {
   productosService,
   sociosService,
   inversoresService,
-} from "@/lib/firebaseService";
+} from "@/lib/supabaseService";
 
 interface DashboardStats {
   // Financiero

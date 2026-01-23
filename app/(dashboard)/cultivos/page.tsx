@@ -37,9 +37,8 @@ import {
   geneticasService,
   macetasService,
   registrosCultivoService,
-} from "@/lib/firebaseService";
-import { useAuth } from "@/contexts/AuthContext";
-import { orderBy, where } from "firebase/firestore";
+} from "@/lib/supabaseService";
+import { useAuth } from "@/contexts/AuthContextSupabase";
 
 const ETAPAS: EtapaCultivo[] = [
   "GERMINACION",
@@ -166,10 +165,10 @@ export default function CultivosPage() {
   const loadData = async () => {
     try {
       const [cultivosData, camasData, macetasData, geneticasData] = await Promise.all([
-        cultivosService.getAll([orderBy("fechaInicio", "desc")]),
-        camasService.getAll([orderBy("nombre")]),
-        macetasService.getAll([orderBy("nombre")]),
-        geneticasService.getAll([orderBy("nombre")]),
+        cultivosService.getAll(),
+        camasService.getAll(),
+        macetasService.getAll(),
+        geneticasService.getAll(),
       ]);
 
       const camasMap = new Map(camasData.map((cama) => [cama.id, cama]));
@@ -195,10 +194,7 @@ export default function CultivosPage() {
 
   const loadRegistros = useCallback(async (cultivoId: string) => {
     try {
-      const data = await registrosCultivoService.query([
-        where("cultivoId", "==", cultivoId),
-        orderBy("fecha", "desc"),
-      ]);
+      const data = await registrosCultivoService.query({ cultivoId });
       setRegistros(data);
     } catch (error) {
       console.error("Error cargando registros:", error);
@@ -340,10 +336,7 @@ export default function CultivosPage() {
     if (formData.tipoUbicacion === "MACETA" && formData.estado === "ACTIVO") {
       const macetaId = formData.macetaId;
       if (macetaId) {
-        const active = await cultivosService.query([
-          where("macetaId", "==", macetaId),
-          where("estado", "==", "ACTIVO"),
-        ]);
+        const active = await cultivosService.query({ macetaId, estado: "ACTIVO" });
         const conflict = active.find(
           (cultivo) => cultivo.id !== editingId && !cultivo.deletedAt
         );

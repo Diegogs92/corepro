@@ -26,7 +26,7 @@ import {
   movimientosStockService,
   productosService,
   productosServiceExtended,
-} from "@/lib/firebaseService";
+} from "@/lib/supabaseService";
 
 export default function StockPage() {
   const [productos, setProductos] = useState<Producto[]>([]);

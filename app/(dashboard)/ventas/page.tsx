@@ -28,7 +28,7 @@ import {
   sociosService,
   ventasService,
   ventasServiceExtended,
-} from "@/lib/firebaseService";
+} from "@/lib/supabaseService";
 
 interface VentaConItems extends Venta {
   items: ItemVenta[];
@@ -103,9 +103,9 @@ export default function VentasPage() {
   const loadData = async () => {
     try {
       const [sociosData, productosData, ventasData, itemsData] = await Promise.all([
-        sociosService.getAll([orderBy("nombre")]),
+        sociosService.getAll(),
         productosService.getAll(),
-        ventasService.getAll([orderBy("fecha", "desc")]),
+        ventasService.getAll(),
         itemsVentaService.getAll(),
       ]);
 
@@ -222,7 +222,7 @@ export default function VentasPage() {
           itemsPayload
         );
       } else {
-        await ventasServiceExtended.createVentaCompleta(ventaPayload, itemsPayload);
+        await ventasServiceExtended.createVentaCompleta({ venta: ventaPayload, items: itemsPayload });
       }
 
       await loadData();
